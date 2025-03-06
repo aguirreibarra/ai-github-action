@@ -30,7 +30,7 @@ class GitHubAgent:
         self,
         github_token: str,
         openai_api_key: str,
-        model: str = "gpt-4-turbo",
+        model: str = "gpt-4o-mini",
         custom_prompt: Optional[str] = None,
     ):
         """Initialize the GitHub agent.

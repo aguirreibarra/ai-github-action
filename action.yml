@@ -18,7 +18,7 @@ inputs:
   model:
     description: 'OpenAI model to use'
     required: false
-    default: 'gpt-4-turbo'
+    default: 'gpt-4o-mini'
   custom-prompt:
     description: 'Custom system prompt for the AI'
     required: false

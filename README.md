@@ -97,7 +97,7 @@ jobs:
 | `action-type` | Type of action (pr-review, issue-analyze, code-scan) | Yes | - |
 | `openai-api-key` | OpenAI API key | Yes | - |
 | `github-token` | GitHub token for API access | Yes | - |
-| `model` | OpenAI model to use | No | gpt-4-turbo |
+| `model` | OpenAI model to use | No | gpt-4o-mini |
 | `custom-prompt` | Custom system prompt for the AI | No | - |
 | `max-files` | Maximum files to review in PR | No | 10 |
 | `include-patterns` | Glob patterns for files to include | No | - |
