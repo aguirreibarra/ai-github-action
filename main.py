@@ -75,9 +75,35 @@ def main():
         # Set outputs
         if results:
             with open(os.environ.get("GITHUB_OUTPUT", "/dev/null"), "a") as f:
-                f.write(f"summary={results.get('summary', '')}\n")
-                f.write(f"details={results.get('details', '')}\n")
-                f.write(f"suggestions={results.get('suggestions', '')}\n")
+                # Use GitHub's multiline output format with delimiters
+                # https://docs.github.com/en/actions/using-workflows/workflow-commands-for-github-actions#multiline-strings
+                
+                # Write summary
+                summary = results.get('summary', '')
+                if summary:
+                    f.write("summary<<EOF\n")
+                    f.write(f"{summary}\n")
+                    f.write("EOF\n")
+                else:
+                    f.write("summary=\n")
+                
+                # Write details
+                details = results.get('details', '')
+                if details:
+                    f.write("details<<EOF\n")
+                    f.write(f"{details}\n")
+                    f.write("EOF\n")
+                else:
+                    f.write("details=\n")
+                
+                # Write suggestions
+                suggestions = results.get('suggestions', '')
+                if suggestions:
+                    f.write("suggestions<<EOF\n")
+                    f.write(f"{suggestions}\n")
+                    f.write("EOF\n")
+                else:
+                    f.write("suggestions=\n")
         
         logger.info("Action completed successfully")
     
