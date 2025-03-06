@@ -108,4 +108,4 @@ class IssueAnalyzeAction:
 
         except Exception as e:
             logger.error(f"Error running issue analysis action: {str(e)}")
-            return {"summary": f"Error: {str(e)}", "details": "", "suggestions": ""}
+            raise

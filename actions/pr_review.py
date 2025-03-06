@@ -119,15 +119,21 @@ class PRReviewAction:
             context = f"Pull request review for {repo_name}#{pr_number}"
             response = self.agent.process_message(message, context)
 
-            # Post comment to PR
-            self.agent.execute_tool(
-                "add_pull_request_comment",
+            # Unique header for AI review comments - used to identify our comments when updating
+            comment_header = "## AI Code Review\n\n"
+
+            # Post or update comment on PR
+            result = self.agent.execute_tool(
+                "update_or_create_pr_comment",
                 {
                     "repo": repo_name,
                     "pr_number": pr_number,
-                    "body": f"## AI Code Review\n\n{response['content']}",
+                    "body": f"{comment_header}{response['content']}",
+                    "header_marker": comment_header,
                 },
             )
+
+            logger.info(f"PR comment {result['action']} with ID {result['id']}")
 
             # Extract structured data from the response
             lines = response["content"].split("\n")
@@ -171,4 +177,4 @@ class PRReviewAction:
 
         except Exception as e:
             logger.error(f"Error running PR review action: {str(e)}")
-            return {"summary": f"Error: {str(e)}", "details": "", "suggestions": ""}
+            raise
