@@ -1,5 +1,3 @@
-# Example workflow for AI issue analysis
-
 name: AI Issue Analysis
 
 on:
@@ -13,7 +11,7 @@ jobs:
     if: github.event.action == 'opened' || contains(github.event.issue.labels.*.name, 'needs-triage')
     steps:
       - name: AI Issue Analysis
-        uses: aguirreibarra/ai-github-action@main
+        uses: ./
         with:
           action-type: issue-analyze
           openai-api-key: ${{ secrets.OPENAI_API_KEY }}
