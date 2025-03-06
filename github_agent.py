@@ -1,8 +1,13 @@
 import json
 import logging
-from typing import Dict, List, Optional, Any
+from typing import Dict, List, Optional, Any, cast, Iterable
 import openai
+from openai.types.chat import ChatCompletion
 from github import Github
+
+# Define a type for OpenAI tool parameters
+ChatCompletionToolParam = Dict[str, Any]
+
 from tools.github_tools import (
     GetPullRequestTool,
     GetPullRequestFilesTool,
@@ -50,7 +55,7 @@ class GitHubAgent:
         # Register tools
         self.tools = self._register_tools()
 
-    def _register_tools(self) -> List[Dict[str, Any]]:
+    def _register_tools(self) -> List[ChatCompletionToolParam]:
         """Register available tools for the agent."""
         tools = [
             GetPullRequestTool(self.github),
@@ -64,8 +69,8 @@ class GitHubAgent:
             GetRepositoryStatsTool(self.github),
         ]
 
-        # Format tools for OpenAI API
-        return [tool.to_openai_tool() for tool in tools]
+        # Format tools for OpenAI API and cast to the correct type
+        return cast(List[ChatCompletionToolParam], [tool.to_openai_tool() for tool in tools])
 
     def _get_system_prompt(self, context: Optional[str] = None) -> str:
         """Get the system prompt for the agent."""
@@ -134,6 +139,7 @@ class GitHubAgent:
         # Call OpenAI API
         while True:
             try:
+                # Call the OpenAI API with proper typing
                 response = self.client.chat.completions.create(
                     model=self.model,
                     messages=messages,
