@@ -1,6 +1,7 @@
 import fnmatch
 import os
 import logging
+import re
 from typing import Dict, Any, List, Optional
 
 logger = logging.getLogger("pr-review-action")
@@ -182,15 +183,23 @@ class PRReviewAction:
 
             if auto_approve and assessment:
                 assessment_lower = assessment.lower()
-                if "approve" in assessment_lower and not any(
-                    term in assessment_lower
-                    for term in [
-                        "not approve",
-                        "don't approve",
-                        "cannot approve",
-                        "wouldn't approve",
-                    ]
-                ):
+
+                # Use regex for more precise pattern matching
+                approval_regex = re.compile(
+                    r"\b(approve|approval|approved|lgtm|ship\s+it)\b|:\s*approve",
+                    re.IGNORECASE,
+                )
+                negation_regex = re.compile(
+                    r"(not|don\'t|cannot|wouldn\'t|no|shouldn\'t)\s+(approve|approval|approved)",
+                    re.IGNORECASE,
+                )
+
+                # Check for approval patterns
+                has_approval = bool(approval_regex.search(assessment_lower))
+                # Check for negation patterns
+                has_negation = bool(negation_regex.search(assessment_lower))
+
+                if has_approval and not has_negation:
                     should_approve = True
                     logger.info("Review is favorable, approving PR")
 
