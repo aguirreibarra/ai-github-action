@@ -32,6 +32,10 @@ inputs:
   exclude-patterns:
     description: 'Glob patterns for files to exclude, comma-separated'
     required: false
+  auto-approve:
+    description: 'Automatically approve PRs with favorable reviews'
+    required: false
+    default: 'false'
 
 outputs:
   summary:
@@ -53,3 +57,4 @@ runs:
     MAX_FILES: ${{ inputs.max-files }}
     INCLUDE_PATTERNS: ${{ inputs.include-patterns }}
     EXCLUDE_PATTERNS: ${{ inputs.exclude-patterns }}
+    AUTO_APPROVE: ${{ inputs.auto-approve }}
