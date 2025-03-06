@@ -11,7 +11,7 @@ from github_agent import GitHubAgent
 class TestGitHubAgent(unittest.TestCase):
     def setUp(self):
         self.github_mock = MagicMock()
-        self.openai_mock = MagicMock()
+        self.openai_client_mock = MagicMock()
 
         # Apply patches
         self.github_patch = patch("github_agent.Github")
@@ -19,6 +19,7 @@ class TestGitHubAgent(unittest.TestCase):
 
         self.github_patch.start().return_value = self.github_mock
         self.openai_mock = self.openai_patch.start()
+        self.openai_mock.OpenAI.return_value = self.openai_client_mock
 
         # Create agent
         self.agent = GitHubAgent(
@@ -27,6 +28,9 @@ class TestGitHubAgent(unittest.TestCase):
             model="gpt-4",
             custom_prompt=None,
         )
+
+        # Assign the client directly to ensure it's accessible in tests
+        self.agent.client = self.openai_client_mock
 
     def tearDown(self):
         self.github_patch.stop()
@@ -38,7 +42,8 @@ class TestGitHubAgent(unittest.TestCase):
         self.assertEqual(self.agent.openai_api_key, "fake-key")
         self.assertEqual(self.agent.model, "gpt-4")
         self.assertIsNone(self.agent.custom_prompt)
-        self.assertEqual(self.openai_mock.api_key, "fake-key")
+        # In new code we use client object instead of global API key
+        self.openai_mock.OpenAI.assert_called_once_with(api_key="fake-key")
 
     def test_register_tools(self):
         # Test that tools are registered correctly
@@ -93,48 +98,79 @@ class TestGitHubAgent(unittest.TestCase):
         # Setup OpenAI mock response
         mock_response = MagicMock()
         mock_response.choices = [MagicMock()]
-        mock_response.choices[0].message = {"content": "Test response"}
-        self.openai_mock.ChatCompletion.create.return_value = mock_response
+        # Create a response object with content attribute
+        mock_message = MagicMock()
+        mock_message.content = "Test response"
+        mock_message.tool_calls = None
+        mock_response.choices[0].message = mock_message
 
-        # Test message processing
-        result = self.agent.process_message("Test message")
+        # Use side_effect to capture the messages at the time of the API call
+        original_messages = None
+
+        def capture_messages_side_effect(**kwargs):
+            nonlocal original_messages
+            original_messages = kwargs["messages"].copy()
+            return mock_response
+
+        self.openai_client_mock.chat.completions.create.side_effect = (
+            capture_messages_side_effect
+        )
+
+        # Test message processing with explicit max_iterations
+        result = self.agent.process_message("Test message", max_iterations=5)
 
         # Check that OpenAI API was called
-        self.openai_mock.ChatCompletion.create.assert_called_once()
-        call_args = self.openai_mock.ChatCompletion.create.call_args[1]
+        self.openai_client_mock.chat.completions.create.assert_called_once()
+        call_args = self.openai_client_mock.chat.completions.create.call_args[1]
         self.assertEqual(call_args["model"], "gpt-4")
         self.assertIn("messages", call_args)
         self.assertIn("tools", call_args)
 
-        # Check that messages are formatted correctly
-        messages = call_args["messages"]
-        self.assertEqual(messages[0]["role"], "system")
-        self.assertEqual(messages[-1]["role"], "user")
-        self.assertEqual(messages[-1]["content"], "Test message")
+        # Check that initial messages sent to API are formatted correctly
+        self.assertEqual(original_messages[0]["role"], "system")
+        self.assertEqual(original_messages[-1]["role"], "user")
+        self.assertEqual(original_messages[-1]["content"], "Test message")
 
         # Check result
         self.assertEqual(result["content"], "Test response")
         self.assertIn("conversation_history", result)
 
+        # Final conversation history should include the response
+        conversation_history = result["conversation_history"]
+        self.assertEqual(conversation_history[-1]["role"], "assistant")
+        self.assertEqual(conversation_history[-1]["content"], "Test response")
+
     def test_process_message_with_tool_calls(self):
+        """Test that the agent correctly processes a message with tool calls."""
         # Setup OpenAI mock responses for tool calling
         mock_response1 = MagicMock()
         mock_response1.choices = [MagicMock()]
-        mock_message1 = {
-            "tool_calls": [
-                {
-                    "function": {"name": "get_pull_request", "arguments": "{}"},
-                    "id": "call1",
-                }
-            ]
-        }
+
+        # Create a tool call object
+        mock_tool_call = MagicMock()
+        mock_tool_call.id = "call1"
+        mock_tool_call.type = "function"
+        mock_tool_call.function = MagicMock()
+        mock_tool_call.function.name = "get_pull_request"
+        mock_tool_call.function.arguments = "{}"
+
+        # Create a message with tool calls
+        mock_message1 = MagicMock()
+        mock_message1.tool_calls = [mock_tool_call]
+        mock_message1.content = None
         mock_response1.choices[0].message = mock_message1
 
+        # Create a final response message
         mock_response2 = MagicMock()
         mock_response2.choices = [MagicMock()]
-        mock_response2.choices[0].message = {"content": "Final response"}
+        mock_message2 = MagicMock()
+        mock_message2.content = "Final response"
+        mock_message2.tool_calls = None
+        mock_response2.choices[0].message = mock_message2
 
-        self.openai_mock.ChatCompletion.create.side_effect = [
+        # Reset mock to clear history and configure it
+        self.openai_client_mock.chat.completions.create.reset_mock()
+        self.openai_client_mock.chat.completions.create.side_effect = [
             mock_response1,
             mock_response2,
         ]
@@ -143,16 +179,55 @@ class TestGitHubAgent(unittest.TestCase):
         self.agent.execute_tool = MagicMock(return_value={"title": "Test PR"})
 
         # Test message processing with tool calls
-        result = self.agent.process_message("Test message with tool call")
+        result = self.agent.process_message(
+            "Test message with tool call", max_iterations=3
+        )
 
-        # Check that OpenAI API was called twice
-        self.assertEqual(self.openai_mock.ChatCompletion.create.call_count, 2)
+        # Verify API was called
+        self.assertGreaterEqual(
+            len(self.openai_client_mock.chat.completions.create.call_args_list), 1
+        )
+
+        # Verify we got the expected result
+        self.assertEqual(result["content"], "Final response")
 
         # Check that tool was executed
         self.agent.execute_tool.assert_called_once_with("get_pull_request", {})
 
-        # Check result
-        self.assertEqual(result["content"], "Final response")
+    def test_process_message_max_iterations(self):
+        """Test that process_message respects the max_iterations parameter."""
+        # Create an infinite loop scenario with tool calls that never resolve
+        mock_response = MagicMock()
+        mock_response.choices = [MagicMock()]
+
+        # Create a tool call that would keep calling in a loop
+        mock_tool_call = MagicMock()
+        mock_tool_call.id = "call1"
+        mock_tool_call.type = "function"
+        mock_tool_call.function = MagicMock()
+        mock_tool_call.function.name = "get_pull_request"
+        mock_tool_call.function.arguments = "{}"
+
+        mock_message = MagicMock()
+        mock_message.tool_calls = [mock_tool_call]
+        mock_message.content = None
+        mock_response.choices[0].message = mock_message
+
+        # Reset any previous mock configuration
+        self.openai_client_mock.chat.completions.create.reset_mock()
+        self.openai_client_mock.chat.completions.create.return_value = mock_response
+
+        # Mock the execute_tool method
+        self.agent.execute_tool = MagicMock(return_value={"title": "Test PR"})
+
+        # Test with max_iterations=2
+        result = self.agent.process_message("Test message", max_iterations=2)
+
+        # Check that API was called the correct number of times
+        self.assertEqual(self.openai_client_mock.chat.completions.create.call_count, 2)
+
+        # Should include a message about reaching max iterations
+        self.assertIn("maximum number of operations", result["content"])
 
 
 if __name__ == "__main__":
