@@ -1,0 +1,31 @@
+# Example workflow for AI PR review
+
+name: AI PR Review
+
+on:
+  pull_request:
+    types: [opened, synchronize]
+    paths-ignore:
+      - '**.md'
+      - 'docs/**'
+      - '.github/**'
+
+jobs:
+  review:
+    runs-on: arc-runner-set
+    # Only run on PRs from forks or non-collaborators
+    if: github.event.pull_request.head.repo.full_name != github.repository
+    steps:
+      - uses: actions/checkout@v3
+        with:
+          fetch-depth: 0
+          
+      - name: AI PR Review
+        uses: aguirreibarra/ai-github-action@main
+        with:
+          action-type: pr-review
+          openai-api-key: ${{ secrets.OPENAI_API_KEY }}
+          github-token: ${{ secrets.GITHUB_TOKEN }}
+          max-files: 15
+          include-patterns: "*.py,*.js,*.ts,*.jsx,*.tsx,*.java"
+          exclude-patterns: "**/__tests__/**,**/test/**,**/dist/**"

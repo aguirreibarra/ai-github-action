@@ -1,0 +1,57 @@
+# Example workflow for AI issue analysis
+
+name: AI Issue Analysis
+
+on:
+  issues:
+    types: [opened, labeled]
+
+jobs:
+  analyze:
+    runs-on: arc-runner-set
+    # Only run when a specific label is applied or for new issues
+    if: github.event.action == 'opened' || contains(github.event.issue.labels.*.name, 'needs-triage')
+    steps:
+      - name: AI Issue Analysis
+        uses: aguirreibarra/ai-github-action@main
+        with:
+          action-type: issue-analyze
+          openai-api-key: ${{ secrets.OPENAI_API_KEY }}
+          github-token: ${{ secrets.GITHUB_TOKEN }}
+          
+      - name: Apply labels based on analysis
+        uses: actions/github-script@v6
+        if: ${{ success() }}
+        with:
+          github-token: ${{ secrets.GITHUB_TOKEN }}
+          script: |
+            const suggestions = process.env.SUGGESTIONS || '';
+            
+            // Parse suggested labels from the AI response
+            const labelMatches = suggestions.match(/labels?:\s*([a-z-,\s]+)/i);
+            if (labelMatches && labelMatches[1]) {
+              const labels = labelMatches[1].split(',').map(l => l.trim());
+              
+              if (labels.length > 0) {
+                await github.rest.issues.addLabels({
+                  owner: context.repo.owner,
+                  repo: context.repo.repo,
+                  issue_number: context.issue.number,
+                  labels: labels
+                });
+              }
+            }
+            
+            // Remove the needs-triage label if it exists
+            try {
+              await github.rest.issues.removeLabel({
+                owner: context.repo.owner,
+                repo: context.repo.repo,
+                issue_number: context.issue.number,
+                name: 'needs-triage'
+              });
+            } catch (e) {
+              // Label might not exist, that's okay
+            }
+        env:
+          SUGGESTIONS: ${{ steps.analyze.outputs.suggestions }}

@@ -1,0 +1,464 @@
+from typing import Dict, Any, List, Optional
+from abc import ABC, abstractmethod
+from github import Github
+from github.Repository import Repository
+from github.PullRequest import PullRequest
+from github.Issue import Issue
+
+class GitHubTool(ABC):
+    """Base class for GitHub tools."""
+    
+    def __init__(self, github_client: Github):
+        """Initialize the GitHub tool.
+        
+        Args:
+            github_client: GitHub client
+        """
+        self.github = github_client
+    
+    @property
+    @abstractmethod
+    def name(self) -> str:
+        """Tool name."""
+        pass
+    
+    @property
+    @abstractmethod
+    def description(self) -> str:
+        """Tool description."""
+        pass
+    
+    @property
+    @abstractmethod
+    def parameters(self) -> Dict[str, Any]:
+        """Tool parameters."""
+        pass
+    
+    @abstractmethod
+    def execute(self, parameters: Dict[str, Any]) -> Any:
+        """Execute the tool."""
+        pass
+    
+    def to_openai_tool(self) -> Dict[str, Any]:
+        """Convert the tool to OpenAI tool format."""
+        return {
+            "type": "function",
+            "function": {
+                "name": self.name,
+                "description": self.description,
+                "parameters": {
+                    "type": "object",
+                    "properties": self.parameters,
+                    "required": [k for k, v in self.parameters.items() if v.get("required", False)],
+                },
+            },
+        }
+
+
+class GetPullRequestTool(GitHubTool):
+    """Tool for getting pull request information."""
+    
+    @property
+    def name(self) -> str:
+        return "get_pull_request"
+    
+    @property
+    def description(self) -> str:
+        return "Get information about a pull request"
+    
+    @property
+    def parameters(self) -> Dict[str, Any]:
+        return {
+            "repo": {
+                "type": "string",
+                "description": "Repository name with owner (e.g., 'owner/repo')",
+                "required": True,
+            },
+            "pr_number": {
+                "type": "integer",
+                "description": "Pull request number",
+                "required": True,
+            },
+        }
+    
+    def execute(self, parameters: Dict[str, Any]) -> Dict[str, Any]:
+        repo = self.github.get_repo(parameters["repo"])
+        pr = repo.get_pull(parameters["pr_number"])
+        
+        return {
+            "number": pr.number,
+            "title": pr.title,
+            "body": pr.body,
+            "state": pr.state,
+            "user": pr.user.login,
+            "created_at": pr.created_at.isoformat(),
+            "updated_at": pr.updated_at.isoformat(),
+            "merged": pr.merged,
+            "mergeable": pr.mergeable,
+            "comments": pr.comments,
+            "commits": pr.commits,
+            "additions": pr.additions,
+            "deletions": pr.deletions,
+            "changed_files": pr.changed_files,
+        }
+
+
+class GetPullRequestFilesTool(GitHubTool):
+    """Tool for getting files in a pull request."""
+    
+    @property
+    def name(self) -> str:
+        return "get_pull_request_files"
+    
+    @property
+    def description(self) -> str:
+        return "Get the list of files changed in a pull request"
+    
+    @property
+    def parameters(self) -> Dict[str, Any]:
+        return {
+            "repo": {
+                "type": "string",
+                "description": "Repository name with owner (e.g., 'owner/repo')",
+                "required": True,
+            },
+            "pr_number": {
+                "type": "integer",
+                "description": "Pull request number",
+                "required": True,
+            },
+        }
+    
+    def execute(self, parameters: Dict[str, Any]) -> List[Dict[str, Any]]:
+        repo = self.github.get_repo(parameters["repo"])
+        pr = repo.get_pull(parameters["pr_number"])
+        
+        files = []
+        for file in pr.get_files():
+            files.append({
+                "filename": file.filename,
+                "status": file.status,
+                "additions": file.additions,
+                "deletions": file.deletions,
+                "changes": file.changes,
+                "blob_url": file.blob_url,
+                "raw_url": file.raw_url,
+                "patch": file.patch if hasattr(file, "patch") else None,
+            })
+        
+        return files
+
+
+class GetPullRequestDiffTool(GitHubTool):
+    """Tool for getting the diff of a specific file in a pull request."""
+    
+    @property
+    def name(self) -> str:
+        return "get_pull_request_diff"
+    
+    @property
+    def description(self) -> str:
+        return "Get the diff of a specific file in a pull request"
+    
+    @property
+    def parameters(self) -> Dict[str, Any]:
+        return {
+            "repo": {
+                "type": "string",
+                "description": "Repository name with owner (e.g., 'owner/repo')",
+                "required": True,
+            },
+            "pr_number": {
+                "type": "integer",
+                "description": "Pull request number",
+                "required": True,
+            },
+            "filename": {
+                "type": "string",
+                "description": "Path to the file",
+                "required": True,
+            },
+        }
+    
+    def execute(self, parameters: Dict[str, Any]) -> str:
+        repo = self.github.get_repo(parameters["repo"])
+        pr = repo.get_pull(parameters["pr_number"])
+        filename = parameters["filename"]
+        
+        for file in pr.get_files():
+            if file.filename == filename:
+                if hasattr(file, "patch") and file.patch:
+                    return file.patch
+                else:
+                    return f"No diff available for file {filename}"
+        
+        return f"File {filename} not found in pull request {parameters['pr_number']}"
+
+
+class AddPullRequestCommentTool(GitHubTool):
+    """Tool for adding a comment to a pull request."""
+    
+    @property
+    def name(self) -> str:
+        return "add_pull_request_comment"
+    
+    @property
+    def description(self) -> str:
+        return "Add a comment to a pull request"
+    
+    @property
+    def parameters(self) -> Dict[str, Any]:
+        return {
+            "repo": {
+                "type": "string",
+                "description": "Repository name with owner (e.g., 'owner/repo')",
+                "required": True,
+            },
+            "pr_number": {
+                "type": "integer",
+                "description": "Pull request number",
+                "required": True,
+            },
+            "body": {
+                "type": "string",
+                "description": "Comment content, supports Markdown",
+                "required": True,
+            },
+        }
+    
+    def execute(self, parameters: Dict[str, Any]) -> Dict[str, Any]:
+        repo = self.github.get_repo(parameters["repo"])
+        pr = repo.get_pull(parameters["pr_number"])
+        comment = pr.create_issue_comment(parameters["body"])
+        
+        return {
+            "id": comment.id,
+            "url": comment.html_url,
+        }
+
+
+class GetRepositoryTool(GitHubTool):
+    """Tool for getting repository information."""
+    
+    @property
+    def name(self) -> str:
+        return "get_repository"
+    
+    @property
+    def description(self) -> str:
+        return "Get information about a repository"
+    
+    @property
+    def parameters(self) -> Dict[str, Any]:
+        return {
+            "repo": {
+                "type": "string",
+                "description": "Repository name with owner (e.g., 'owner/repo')",
+                "required": True,
+            },
+        }
+    
+    def execute(self, parameters: Dict[str, Any]) -> Dict[str, Any]:
+        repo = self.github.get_repo(parameters["repo"])
+        
+        return {
+            "name": repo.name,
+            "full_name": repo.full_name,
+            "description": repo.description,
+            "language": repo.language,
+            "topics": repo.topics,
+            "forks": repo.forks_count,
+            "stars": repo.stargazers_count,
+            "open_issues": repo.open_issues_count,
+            "created_at": repo.created_at.isoformat() if repo.created_at else None,
+            "updated_at": repo.updated_at.isoformat() if repo.updated_at else None,
+            "default_branch": repo.default_branch,
+            "license": repo.license.name if repo.license else None,
+        }
+
+
+class GetIssueTool(GitHubTool):
+    """Tool for getting issue information."""
+    
+    @property
+    def name(self) -> str:
+        return "get_issue"
+    
+    @property
+    def description(self) -> str:
+        return "Get information about an issue"
+    
+    @property
+    def parameters(self) -> Dict[str, Any]:
+        return {
+            "repo": {
+                "type": "string",
+                "description": "Repository name with owner (e.g., 'owner/repo')",
+                "required": True,
+            },
+            "issue_number": {
+                "type": "integer",
+                "description": "Issue number",
+                "required": True,
+            },
+        }
+    
+    def execute(self, parameters: Dict[str, Any]) -> Dict[str, Any]:
+        repo = self.github.get_repo(parameters["repo"])
+        issue = repo.get_issue(parameters["issue_number"])
+        
+        return {
+            "number": issue.number,
+            "title": issue.title,
+            "body": issue.body,
+            "state": issue.state,
+            "user": issue.user.login,
+            "created_at": issue.created_at.isoformat(),
+            "updated_at": issue.updated_at.isoformat(),
+            "comments": issue.comments,
+            "labels": [{"name": label.name, "color": label.color} for label in issue.labels],
+            "assignees": [assignee.login for assignee in issue.assignees],
+        }
+
+
+class AddIssueCommentTool(GitHubTool):
+    """Tool for adding a comment to an issue."""
+    
+    @property
+    def name(self) -> str:
+        return "add_issue_comment"
+    
+    @property
+    def description(self) -> str:
+        return "Add a comment to an issue"
+    
+    @property
+    def parameters(self) -> Dict[str, Any]:
+        return {
+            "repo": {
+                "type": "string",
+                "description": "Repository name with owner (e.g., 'owner/repo')",
+                "required": True,
+            },
+            "issue_number": {
+                "type": "integer",
+                "description": "Issue number",
+                "required": True,
+            },
+            "body": {
+                "type": "string",
+                "description": "Comment content, supports Markdown",
+                "required": True,
+            },
+        }
+    
+    def execute(self, parameters: Dict[str, Any]) -> Dict[str, Any]:
+        repo = self.github.get_repo(parameters["repo"])
+        issue = repo.get_issue(parameters["issue_number"])
+        comment = issue.create_comment(parameters["body"])
+        
+        return {
+            "id": comment.id,
+            "url": comment.html_url,
+        }
+
+
+class GetRepositoryFileContentTool(GitHubTool):
+    """Tool for getting the content of a file in a repository."""
+    
+    @property
+    def name(self) -> str:
+        return "get_repository_file_content"
+    
+    @property
+    def description(self) -> str:
+        return "Get the content of a file in a repository"
+    
+    @property
+    def parameters(self) -> Dict[str, Any]:
+        return {
+            "repo": {
+                "type": "string",
+                "description": "Repository name with owner (e.g., 'owner/repo')",
+                "required": True,
+            },
+            "path": {
+                "type": "string",
+                "description": "Path to the file",
+                "required": True,
+            },
+            "ref": {
+                "type": "string",
+                "description": "The name of the commit/branch/tag",
+                "required": False,
+            },
+        }
+    
+    def execute(self, parameters: Dict[str, Any]) -> str:
+        repo = self.github.get_repo(parameters["repo"])
+        path = parameters["path"]
+        ref = parameters.get("ref")
+        
+        try:
+            file_content = repo.get_contents(path, ref=ref)
+            if isinstance(file_content, list):
+                return "This is a directory, not a file"
+            
+            return file_content.decoded_content.decode('utf-8')
+        except Exception as e:
+            return f"Error: {str(e)}"
+
+
+class GetRepositoryStatsTool(GitHubTool):
+    """Tool for getting repository statistics."""
+    
+    @property
+    def name(self) -> str:
+        return "get_repository_stats"
+    
+    @property
+    def description(self) -> str:
+        return "Get statistics about a repository"
+    
+    @property
+    def parameters(self) -> Dict[str, Any]:
+        return {
+            "repo": {
+                "type": "string",
+                "description": "Repository name with owner (e.g., 'owner/repo')",
+                "required": True,
+            },
+        }
+    
+    def execute(self, parameters: Dict[str, Any]) -> Dict[str, Any]:
+        repo = self.github.get_repo(parameters["repo"])
+        
+        stats = {
+            "name": repo.name,
+            "full_name": repo.full_name,
+            "forks": repo.forks_count,
+            "stars": repo.stargazers_count,
+            "watchers": repo.watchers_count,
+            "open_issues": repo.open_issues_count,
+            "network_count": repo.network_count,
+            "subscribers_count": repo.subscribers_count,
+            "size": repo.size,
+            "open_pull_requests": len(list(repo.get_pulls(state='open'))),
+        }
+        
+        try:
+            # These could potentially fail or timeout
+            stats["commit_activity"] = [
+                {"week": activity.week, "total": activity.total, "days": activity.days}
+                for activity in repo.get_stats_commit_activity()
+            ] if repo.get_stats_commit_activity() else []
+            
+            stats["code_frequency"] = [
+                {"week": freq.week, "additions": freq.additions, "deletions": freq.deletions}
+                for freq in repo.get_stats_code_frequency()
+            ] if repo.get_stats_code_frequency() else []
+        except:
+            stats["commit_activity"] = "Stats unavailable"
+            stats["code_frequency"] = "Stats unavailable"
+        
+        return stats

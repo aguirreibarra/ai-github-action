@@ -1,0 +1,55 @@
+name: 'AI GitHub Action'
+description: 'GitHub Actions powered by the Aguirre Ibarra AI Agents framework'
+author: 'Aguirre Ibarra'
+branding:
+  icon: 'cpu'
+  color: 'blue'
+
+inputs:
+  action-type:
+    description: 'Type of action to perform (pr-review, issue-analyze, code-scan)'
+    required: true
+  openai-api-key:
+    description: 'OpenAI API key'
+    required: true
+  github-token:
+    description: 'GitHub token for API access'
+    required: true
+  model:
+    description: 'OpenAI model to use'
+    required: false
+    default: 'gpt-4-turbo'
+  custom-prompt:
+    description: 'Custom system prompt for the AI'
+    required: false
+  max-files:
+    description: 'Maximum files to review in PR'
+    required: false
+    default: '10'
+  include-patterns:
+    description: 'Glob patterns for files to include, comma-separated'
+    required: false
+  exclude-patterns:
+    description: 'Glob patterns for files to exclude, comma-separated'
+    required: false
+
+outputs:
+  summary:
+    description: 'Summary of the action results'
+  details:
+    description: 'Detailed report of the action results'
+  suggestions:
+    description: 'Suggested improvements or changes'
+
+runs:
+  using: 'docker'
+  image: 'Dockerfile'
+  env:
+    OPENAI_API_KEY: ${{ inputs.openai-api-key }}
+    GITHUB_TOKEN: ${{ inputs.github-token }}
+    ACTION_TYPE: ${{ inputs.action-type }}
+    MODEL: ${{ inputs.model }}
+    CUSTOM_PROMPT: ${{ inputs.custom-prompt }}
+    MAX_FILES: ${{ inputs.max-files }}
+    INCLUDE_PATTERNS: ${{ inputs.include-patterns }}
+    EXCLUDE_PATTERNS: ${{ inputs.exclude-patterns }}
