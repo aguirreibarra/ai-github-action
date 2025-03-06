@@ -13,6 +13,7 @@ AI GitHub Action leverages the AI Agents framework to create intelligent GitHub 
 - Code scanning for security vulnerabilities and best practices
 - Repository statistics and insights
 - Customizable AI prompts for different contexts
+- Poetry dependency management for consistent environments
 
 ## Usage
 
