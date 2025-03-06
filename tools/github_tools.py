@@ -39,20 +39,36 @@ class GitHubTool(ABC):
 
     def to_openai_tool(self) -> Dict[str, Any]:
         """Convert the tool to OpenAI tool format."""
+        # Extract required parameters
+        required_params = [
+            k for k, v in self.parameters.items() 
+            if v.get("required", False)
+        ]
+        
+        # Clean up parameter definitions by removing the "required" field
+        # since it's not part of the OpenAI schema
+        properties = {}
+        for param_name, param_def in self.parameters.items():
+            # Create a new dict without the "required" key
+            clean_param = {k: v for k, v in param_def.items() if k != "required"}
+            properties[param_name] = clean_param
+            
+        # Prepare the schema following OpenAI API v1+ format
+        schema = {
+            "type": "object",
+            "properties": properties,
+        }
+        
+        # Only add required field if there are required parameters
+        if required_params:
+            schema["required"] = required_params
+            
         return {
             "type": "function",
             "function": {
                 "name": self.name,
                 "description": self.description,
-                "parameters": {
-                    "type": "object",
-                    "properties": self.parameters,
-                    "required": [
-                        k
-                        for k, v in self.parameters.items()
-                        if v.get("required", False)
-                    ],
-                },
+                "parameters": schema,
             },
         }
 

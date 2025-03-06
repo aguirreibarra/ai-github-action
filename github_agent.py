@@ -1,8 +1,13 @@
 import json
 import logging
-from typing import Dict, List, Optional, Any
+from typing import Dict, List, Optional, Any, cast, Iterable
 import openai
+from openai.types.chat import ChatCompletion
 from github import Github
+
+# Define a type for OpenAI tool parameters
+ChatCompletionToolParam = Dict[str, Any]
+
 from tools.github_tools import (
     GetPullRequestTool,
     GetPullRequestFilesTool,
@@ -45,12 +50,12 @@ class GitHubAgent:
         self.github = Github(github_token)
 
         # Initialize OpenAI client
-        openai.api_key = openai_api_key
+        self.client = openai.OpenAI(api_key=openai_api_key)
 
         # Register tools
         self.tools = self._register_tools()
 
-    def _register_tools(self) -> List[Dict[str, Any]]:
+    def _register_tools(self) -> List[ChatCompletionToolParam]:
         """Register available tools for the agent."""
         tools = [
             GetPullRequestTool(self.github),
@@ -64,8 +69,10 @@ class GitHubAgent:
             GetRepositoryStatsTool(self.github),
         ]
 
-        # Format tools for OpenAI API
-        return [tool.to_openai_tool() for tool in tools]
+        # Format tools for OpenAI API and cast to the correct type
+        return cast(
+            List[ChatCompletionToolParam], [tool.to_openai_tool() for tool in tools]
+        )
 
     def _get_system_prompt(self, context: Optional[str] = None) -> str:
         """Get the system prompt for the agent."""
@@ -110,13 +117,16 @@ class GitHubAgent:
         message: str,
         context: Optional[str] = None,
         conversation_history: Optional[List[Dict[str, Any]]] = None,
+        max_iterations: int = 10,
     ) -> Dict[str, Any]:
-        """Process a message using the OpenAI API.
+        """
+        Process a user message and return a response.
 
         Args:
             message: The user message to process
             context: Optional context to include in the system prompt
             conversation_history: Optional conversation history
+            max_iterations: Maximum number of tool calling iterations to prevent infinite loops
 
         Returns:
             The assistant's response
@@ -132,9 +142,23 @@ class GitHubAgent:
         ]
 
         # Call OpenAI API
+        iteration_count = 0
         while True:
             try:
-                response = openai.chat.completions.create(
+                # Check for max iterations to prevent infinite loops
+                if iteration_count >= max_iterations:
+                    logger.warning(
+                        f"Reached maximum iterations ({max_iterations}). Breaking loop."
+                    )
+                    return {
+                        "content": "I've reached the maximum number of operations. Please break down your request into smaller steps.",
+                        "conversation_history": messages,
+                    }
+
+                iteration_count += 1
+
+                # Call the OpenAI API with proper typing
+                response = self.client.chat.completions.create(
                     model=self.model,
                     messages=messages,
                     tools=self.tools,
@@ -142,10 +166,30 @@ class GitHubAgent:
                 )
 
                 assistant_message = response.choices[0].message
-                messages.append(assistant_message)
+                # Convert message object to dict format for the conversation history
+                assistant_dict = {
+                    "role": "assistant",
+                    "content": assistant_message.content,
+                }
+
+                # Add tool_calls if present
+                if assistant_message.tool_calls:
+                    assistant_dict["tool_calls"] = [
+                        {
+                            "id": tc.id,
+                            "type": tc.type,
+                            "function": {
+                                "name": tc.function.name,
+                                "arguments": tc.function.arguments,
+                            },
+                        }
+                        for tc in assistant_message.tool_calls
+                    ]
+
+                messages.append(assistant_dict)
 
                 # Check if the assistant is requesting to use a tool
-                if assistant_message.get("tool_calls"):
+                if assistant_message.tool_calls:
                     # Execute each tool call
                     for tool_call in assistant_message.tool_calls:
                         tool_name = tool_call.function.name
