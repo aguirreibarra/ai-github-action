@@ -45,7 +45,7 @@ class GitHubAgent:
         self.github = Github(github_token)
 
         # Initialize OpenAI client
-        openai.api_key = openai_api_key
+        self.client = openai.OpenAI(api_key=openai_api_key)
 
         # Register tools
         self.tools = self._register_tools()
@@ -134,7 +134,7 @@ class GitHubAgent:
         # Call OpenAI API
         while True:
             try:
-                response = openai.chat.completions.create(
+                response = self.client.chat.completions.create(
                     model=self.model,
                     messages=messages,
                     tools=self.tools,
@@ -142,10 +142,29 @@ class GitHubAgent:
                 )
 
                 assistant_message = response.choices[0].message
-                messages.append(assistant_message)
+                # Convert message object to dict format for the conversation history
+                assistant_dict = {
+                    "role": "assistant",
+                    "content": assistant_message.content
+                }
+                
+                # Add tool_calls if present
+                if assistant_message.tool_calls:
+                    assistant_dict["tool_calls"] = [
+                        {
+                            "id": tc.id,
+                            "type": tc.type,
+                            "function": {
+                                "name": tc.function.name,
+                                "arguments": tc.function.arguments
+                            }
+                        } for tc in assistant_message.tool_calls
+                    ]
+                
+                messages.append(assistant_dict)
 
                 # Check if the assistant is requesting to use a tool
-                if assistant_message.get("tool_calls"):
+                if assistant_message.tool_calls:
                     # Execute each tool call
                     for tool_call in assistant_message.tool_calls:
                         tool_name = tool_call.function.name

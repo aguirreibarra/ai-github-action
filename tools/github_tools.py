@@ -53,16 +53,22 @@ class GitHubTool(ABC):
             clean_param = {k: v for k, v in param_def.items() if k != "required"}
             properties[param_name] = clean_param
             
+        # Prepare the schema following OpenAI API v1+ format
+        schema = {
+            "type": "object",
+            "properties": properties,
+        }
+        
+        # Only add required field if there are required parameters
+        if required_params:
+            schema["required"] = required_params
+            
         return {
             "type": "function",
             "function": {
                 "name": self.name,
                 "description": self.description,
-                "parameters": {
-                    "type": "object",
-                    "properties": properties,
-                    "required": required_params,
-                },
+                "parameters": schema,
             },
         }
 
