@@ -105,6 +105,8 @@ class GitHubAgent:
                     GetPullRequestFilesTool(self.github),
                     GetPullRequestDiffTool(self.github),
                     AddPullRequestCommentTool(self.github),
+                    ListPullRequestCommentsTool(self.github),
+                    UpdateOrCreatePullRequestCommentTool(self.github),
                     GetRepositoryTool(self.github),
                     GetIssueTool(self.github),
                     AddIssueCommentTool(self.github),
