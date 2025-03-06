@@ -7,7 +7,7 @@ on:
 
 jobs:
   scan-ai-agents:
-    runs-on: ubuntu-latest
+    runs-on: arc-runner-set
     steps:
     - uses: actions/checkout@v3
     
@@ -73,7 +73,7 @@ jobs:
         SUGGESTIONS: ${{ steps.scan.outputs.suggestions }}
   
   review-recent-prs:
-    runs-on: ubuntu-latest
+    runs-on: arc-runner-set
     steps:
     - uses: actions/checkout@v3
     
