@@ -25,7 +25,7 @@ jobs:
     
     - name: Clone AI Agents repo
       run: |
-        git clone git@github.com:aguirreibarra/ai-agents.git
+        git clone https://github.com/aguirreibarra/ai-agents.git
         cd ai-agents
       
     - name: AI Code Scan
