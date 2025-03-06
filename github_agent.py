@@ -20,6 +20,7 @@ from tools.github_tools import (
     AddIssueCommentTool,
     GetRepositoryFileContentTool,
     GetRepositoryStatsTool,
+    ApprovePullRequestTool,
 )
 
 logger = logging.getLogger("github-agent")
@@ -71,6 +72,7 @@ class GitHubAgent:
             AddIssueCommentTool(self.github),
             GetRepositoryFileContentTool(self.github),
             GetRepositoryStatsTool(self.github),
+            ApprovePullRequestTool(self.github),
         ]
 
         # Format tools for OpenAI API and cast to the correct type
@@ -112,6 +114,7 @@ class GitHubAgent:
                     AddIssueCommentTool(self.github),
                     GetRepositoryFileContentTool(self.github),
                     GetRepositoryStatsTool(self.github),
+                    ApprovePullRequestTool(self.github),
                 ]:
                     if original_tool.name == tool_name:
                         return original_tool.execute(parameters)

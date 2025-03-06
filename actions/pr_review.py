@@ -140,25 +140,31 @@ class PRReviewAction:
             summary = ""
             details = ""
             suggestions = ""
+            assessment = ""
 
             current_section = None
             for line in lines:
-                if "summary" in line.lower() or "changes" in line.lower():
+                line_lower = line.lower()
+
+                if "summary" in line_lower or "changes" in line_lower:
                     current_section = "summary"
                     continue
                 elif (
-                    "issue" in line.lower()
-                    or "bug" in line.lower()
-                    or "problem" in line.lower()
+                    "issue" in line_lower
+                    or "bug" in line_lower
+                    or "problem" in line_lower
                 ):
                     current_section = "details"
                     continue
                 elif (
-                    "suggest" in line.lower()
-                    or "improvement" in line.lower()
-                    or "recommend" in line.lower()
+                    "suggest" in line_lower
+                    or "improvement" in line_lower
+                    or "recommend" in line_lower
                 ):
                     current_section = "suggestions"
+                    continue
+                elif "overall" in line_lower or "assessment" in line_lower:
+                    current_section = "assessment"
                     continue
 
                 if current_section == "summary":
@@ -167,12 +173,50 @@ class PRReviewAction:
                     details += line + "\n"
                 elif current_section == "suggestions":
                     suggestions += line + "\n"
+                elif current_section == "assessment":
+                    assessment += line + "\n"
+
+            # Check if the review is favorable and approve PR if appropriate
+            should_approve = False
+            auto_approve = os.environ.get("AUTO_APPROVE", "false").lower() == "true"
+
+            if auto_approve and assessment:
+                assessment_lower = assessment.lower()
+                if "approve" in assessment_lower and not any(
+                    term in assessment_lower
+                    for term in [
+                        "not approve",
+                        "don't approve",
+                        "cannot approve",
+                        "wouldn't approve",
+                    ]
+                ):
+                    should_approve = True
+                    logger.info("Review is favorable, approving PR")
+
+                    # Approve the PR
+                    try:
+                        approval_result = self.agent.execute_tool(
+                            "approve_pull_request",
+                            {
+                                "repo": repo_name,
+                                "pr_number": pr_number,
+                                "body": "Approved based on AI review assessment",
+                            },
+                        )
+                        logger.info(
+                            f"PR approved with review ID {approval_result['id']}"
+                        )
+                    except Exception as e:
+                        logger.error(f"Failed to approve PR: {str(e)}")
 
             # Return results
             return {
                 "summary": summary.strip(),
                 "details": details.strip(),
                 "suggestions": suggestions.strip(),
+                "assessment": assessment.strip(),
+                "approved": should_approve,
             }
 
         except Exception as e:
