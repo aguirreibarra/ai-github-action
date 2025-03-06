@@ -2,6 +2,7 @@ import unittest
 from unittest.mock import MagicMock
 import os
 import sys
+from datetime import datetime
 
 sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
@@ -10,6 +11,8 @@ from tools.github_tools import (
     GetPullRequestFilesTool,
     GetPullRequestDiffTool,
     AddPullRequestCommentTool,
+    ListPullRequestCommentsTool,
+    UpdateOrCreatePullRequestCommentTool,
     GetRepositoryTool,
     GetIssueTool,
     AddIssueCommentTool,
@@ -145,6 +148,111 @@ class TestGitHubTools(unittest.TestCase):
         self.assertEqual(
             result["url"], "https://github.com/owner/repo/pull/123#issuecomment-456"
         )
+
+    def test_list_pull_request_comments_tool(self):
+        tool = ListPullRequestCommentsTool(self.github_mock)
+
+        # Set up mock for get_issue_comments
+        comment1 = MagicMock()
+        comment1.id = 111
+        comment1.body = "First comment"
+        comment1.user.login = "user1"
+        comment1.created_at = datetime(2023, 1, 1)
+        comment1.updated_at = datetime(2023, 1, 1)
+
+        comment2 = MagicMock()
+        comment2.id = 222
+        comment2.body = "Second comment"
+        comment2.user.login = "user2"
+        comment2.created_at = datetime(2023, 1, 2)
+        comment2.updated_at = datetime(2023, 1, 2)
+
+        self.pr_mock.get_issue_comments.return_value = [comment1, comment2]
+
+        result = tool.execute({"repo": "owner/repo", "pr_number": 123})
+
+        self.github_mock.get_repo.assert_called_once_with("owner/repo")
+        self.repo_mock.get_pull.assert_called_once_with(123)
+        self.pr_mock.get_issue_comments.assert_called_once()
+
+        self.assertEqual(len(result), 2)
+        self.assertEqual(result[0]["id"], 111)
+        self.assertEqual(result[0]["body"], "First comment")
+        self.assertEqual(result[0]["user"], "user1")
+        self.assertEqual(result[1]["id"], 222)
+        self.assertEqual(result[1]["body"], "Second comment")
+        self.assertEqual(result[1]["user"], "user2")
+
+    def test_update_or_create_pr_comment_tool_create_new(self):
+        tool = UpdateOrCreatePullRequestCommentTool(self.github_mock)
+
+        # Set up an empty list of comments
+        self.pr_mock.get_issue_comments.return_value = []
+
+        # Configure the comment mock
+        self.comment_mock.id = 789
+        self.comment_mock.html_url = (
+            "https://github.com/owner/repo/pull/123#issuecomment-789"
+        )
+
+        result = tool.execute(
+            {
+                "repo": "owner/repo",
+                "pr_number": 123,
+                "body": "## AI Code Review\n\nThis is a new comment",
+                "header_marker": "## AI Code Review\n\n",
+            }
+        )
+
+        self.github_mock.get_repo.assert_called_once_with("owner/repo")
+        self.repo_mock.get_pull.assert_called_once_with(123)
+        self.pr_mock.get_issue_comments.assert_called_once()
+        self.pr_mock.create_issue_comment.assert_called_once_with(
+            "## AI Code Review\n\nThis is a new comment"
+        )
+
+        self.assertEqual(result["id"], 789)
+        self.assertEqual(
+            result["url"], "https://github.com/owner/repo/pull/123#issuecomment-789"
+        )
+        self.assertEqual(result["action"], "created")
+
+    def test_update_or_create_pr_comment_tool_update_existing(self):
+        tool = UpdateOrCreatePullRequestCommentTool(self.github_mock)
+
+        # Create a mock for existing comment
+        existing_comment = MagicMock()
+        existing_comment.id = 333
+        existing_comment.body = "## AI Code Review\n\nOld review content"
+        existing_comment.html_url = (
+            "https://github.com/owner/repo/pull/123#issuecomment-333"
+        )
+
+        # Set up list with the existing comment
+        self.pr_mock.get_issue_comments.return_value = [existing_comment]
+
+        result = tool.execute(
+            {
+                "repo": "owner/repo",
+                "pr_number": 123,
+                "body": "## AI Code Review\n\nUpdated review content",
+                "header_marker": "## AI Code Review\n\n",
+            }
+        )
+
+        self.github_mock.get_repo.assert_called_once_with("owner/repo")
+        self.repo_mock.get_pull.assert_called_once_with(123)
+        self.pr_mock.get_issue_comments.assert_called_once()
+        existing_comment.edit.assert_called_once_with(
+            "## AI Code Review\n\nUpdated review content"
+        )
+        self.pr_mock.create_issue_comment.assert_not_called()
+
+        self.assertEqual(result["id"], 333)
+        self.assertEqual(
+            result["url"], "https://github.com/owner/repo/pull/123#issuecomment-333"
+        )
+        self.assertEqual(result["action"], "updated")
 
     def test_get_issue_tool(self):
         tool = GetIssueTool(self.github_mock)

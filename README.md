@@ -14,6 +14,7 @@ AI GitHub Action leverages the AI Agents framework to create intelligent GitHub 
 - Repository statistics and insights
 - Customizable AI prompts for different contexts
 - Poetry dependency management for consistent environments
+- Update existing PR review comments instead of creating new ones
 
 ## Usage
 
@@ -43,6 +44,8 @@ jobs:
           openai-api-key: ${{ secrets.OPENAI_API_KEY }}
           github-token: ${{ secrets.GITHUB_TOKEN }}
 ```
+
+The PR Review Action will analyze pull requests and post feedback as a comment. When triggered multiple times on the same PR (e.g., after new commits), it will update its existing comment instead of creating a new one, keeping the PR timeline clean.
 
 ### Issue Analyzer Action
 

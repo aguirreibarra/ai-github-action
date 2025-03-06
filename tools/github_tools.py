@@ -41,10 +41,9 @@ class GitHubTool(ABC):
         """Convert the tool to OpenAI tool format."""
         # Extract required parameters
         required_params = [
-            k for k, v in self.parameters.items() 
-            if v.get("required", False)
+            k for k, v in self.parameters.items() if v.get("required", False)
         ]
-        
+
         # Clean up parameter definitions by removing the "required" field
         # since it's not part of the OpenAI schema
         properties = {}
@@ -52,17 +51,17 @@ class GitHubTool(ABC):
             # Create a new dict without the "required" key
             clean_param = {k: v for k, v in param_def.items() if k != "required"}
             properties[param_name] = clean_param
-            
+
         # Prepare the schema following OpenAI API v1+ format
         schema = {
             "type": "object",
             "properties": properties,
         }
-        
+
         # Only add required field if there are required parameters
         if required_params:
             schema["required"] = required_params
-            
+
         return {
             "type": "function",
             "function": {
@@ -255,6 +254,119 @@ class AddPullRequestCommentTool(GitHubTool):
             "id": comment.id,
             "url": comment.html_url,
         }
+
+
+class ListPullRequestCommentsTool(GitHubTool):
+    """Tool for listing comments on a pull request."""
+
+    @property
+    def name(self) -> str:
+        return "list_pull_request_comments"
+
+    @property
+    def description(self) -> str:
+        return "List comments on a pull request"
+
+    @property
+    def parameters(self) -> Dict[str, Any]:
+        return {
+            "repo": {
+                "type": "string",
+                "description": "Repository name with owner (e.g., 'owner/repo')",
+                "required": True,
+            },
+            "pr_number": {
+                "type": "integer",
+                "description": "Pull request number",
+                "required": True,
+            },
+        }
+
+    def execute(self, parameters: Dict[str, Any]) -> List[Dict[str, Any]]:
+        repo = self.github.get_repo(parameters["repo"])
+        pr = repo.get_pull(parameters["pr_number"])
+        comments = list(pr.get_issue_comments())
+
+        result = []
+        for comment in comments:
+            result.append(
+                {
+                    "id": comment.id,
+                    "body": comment.body,
+                    "user": comment.user.login,
+                    "created_at": comment.created_at.isoformat(),
+                    "updated_at": comment.updated_at.isoformat(),
+                }
+            )
+
+        return result
+
+
+class UpdateOrCreatePullRequestCommentTool(GitHubTool):
+    """Tool for updating an existing AI review comment or creating a new one."""
+
+    @property
+    def name(self) -> str:
+        return "update_or_create_pr_comment"
+
+    @property
+    def description(self) -> str:
+        return "Update an existing AI review comment or create a new one"
+
+    @property
+    def parameters(self) -> Dict[str, Any]:
+        return {
+            "repo": {
+                "type": "string",
+                "description": "Repository name with owner (e.g., 'owner/repo')",
+                "required": True,
+            },
+            "pr_number": {
+                "type": "integer",
+                "description": "Pull request number",
+                "required": True,
+            },
+            "body": {
+                "type": "string",
+                "description": "Comment content, supports Markdown",
+                "required": True,
+            },
+            "header_marker": {
+                "type": "string",
+                "description": "Unique identifier at the beginning of comments made by this bot",
+                "required": True,
+            },
+        }
+
+    def execute(self, parameters: Dict[str, Any]) -> Dict[str, Any]:
+        repo = self.github.get_repo(parameters["repo"])
+        pr = repo.get_pull(parameters["pr_number"])
+        comments = list(pr.get_issue_comments())
+        header_marker = parameters["header_marker"]
+
+        # Find existing AI review comment
+        existing_comment = None
+        for comment in comments:
+            if comment.body.startswith(header_marker):
+                existing_comment = comment
+                break
+
+        # Update existing comment or create new one
+        if existing_comment:
+            existing_comment.edit(parameters["body"])
+            return {
+                "id": existing_comment.id,
+                "url": existing_comment.html_url,
+                "action": "updated",
+            }
+        else:
+            # No existing comment found, create a new one
+            new_comment = pr.create_issue_comment(parameters["body"])
+            return {
+                "id": new_comment.id,
+                "url": new_comment.html_url,
+                "action": "created",
+            }
 
 
 class GetRepositoryTool(GitHubTool):
