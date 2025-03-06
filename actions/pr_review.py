@@ -112,7 +112,7 @@ class PRReviewAction:
                 f"2. Code quality assessment\n"
                 f"3. Potential issues or bugs\n"
                 f"4. Suggestions for improvement\n"
-                f"5. Overall assessment (approve, request changes, comment)"
+                f"5. Overall assessment (approve, request changes, comment) (use the exact word 'approve' if you think the PR should be merged)"
             )
 
             # Process message with agent
