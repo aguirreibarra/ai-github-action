@@ -37,6 +37,7 @@ class PRReviewAction:
         if not self.include_patterns and not self.exclude_patterns:
             return files[: self.max_files]
 
+        # First pass: filter based on patterns
         matched_files = []
 
         for file in files:
@@ -53,9 +54,13 @@ class PRReviewAction:
             ):
                 matched_files.append(file)
 
-                # Respect max files limit
-                if len(matched_files) >= self.max_files:
-                    break
+        # Always sort files by number of changes (more changes = higher priority)
+        # This ensures consistent ordering for testing and user experience
+        matched_files.sort(key=lambda f: f.get("changes", 0), reverse=True)
+        
+        # Then limit to max_files if needed
+        if len(matched_files) > self.max_files:
+            matched_files = matched_files[:self.max_files]
 
         return matched_files
 
@@ -87,18 +92,31 @@ class PRReviewAction:
             # Filter files based on patterns
             filtered_files = self._match_files(pr_files)
 
-            # Get PR diff for filtered files
+            # Get PR diff for filtered files using a more efficient approach
             pr_diff = ""
+            
+            # First, get all the filenames
+            filenames = [file["filename"] for file in filtered_files]
+            logger.info(f"Getting diffs for {len(filenames)} files: {', '.join(filenames[:3])}{'...' if len(filenames) > 3 else ''}")
+            
+            # Process files one by one but could be parallelized in the future
             for file in filtered_files:
-                file_diff = self.agent.execute_tool(
-                    "get_pull_request_diff",
-                    {
-                        "repo": repo_name,
-                        "pr_number": pr_number,
-                        "filename": file["filename"],
-                    },
-                )
-                pr_diff += f"File: {file['filename']}\n{file_diff}\n\n"
+                try:
+                    file_diff = self.agent.execute_tool(
+                        "get_pull_request_diff",
+                        {
+                            "repo": repo_name,
+                            "pr_number": pr_number,
+                            "filename": file["filename"],
+                        },
+                    )
+                    file_status = file.get("status", "modified")
+                    additions = file.get("additions", 0)
+                    deletions = file.get("deletions", 0)
+                    pr_diff += f"File: {file['filename']} ({file_status}, +{additions}/-{deletions})\n{file_diff}\n\n"
+                except Exception as e:
+                    logger.error(f"Error getting diff for file {file['filename']}: {str(e)}")
+                    pr_diff += f"File: {file['filename']} (Error: Could not retrieve diff)\n\n"
 
             # Construct message for the agent
             message = (
@@ -135,46 +153,70 @@ class PRReviewAction:
 
             logger.info(f"PR comment {result['action']} with ID {result['id']}")
 
-            # Extract structured data from the response
+            # Extract structured data from the response using a more robust approach
             lines = response["content"].split("\n")
-            summary = ""
-            details = ""
-            suggestions = ""
-            assessment = ""
-
-            current_section = None
-            for line in lines:
+            sections = {
+                "summary": [],
+                "details": [],
+                "suggestions": [],
+                "assessment": []
+            }
+            
+            # Define section markers with variations
+            section_markers = {
+                "summary": ["summary", "changes", "overview", "what changed"],
+                "details": ["issue", "bug", "problem", "concern", "potential issues", "code quality"],
+                "suggestions": ["suggest", "improvement", "recommend", "enhancement", "optimization"],
+                "assessment": ["overall", "assessment", "conclusion", "verdict", "approve"]
+            }
+            
+            # First pass: identify section headers and their line numbers
+            section_boundaries = []
+            for i, line in enumerate(lines):
                 line_lower = line.lower()
-
-                if "summary" in line_lower or "changes" in line_lower:
-                    current_section = "summary"
-                    continue
-                elif (
-                    "issue" in line_lower
-                    or "bug" in line_lower
-                    or "problem" in line_lower
-                ):
-                    current_section = "details"
-                    continue
-                elif (
-                    "suggest" in line_lower
-                    or "improvement" in line_lower
-                    or "recommend" in line_lower
-                ):
-                    current_section = "suggestions"
-                    continue
-                elif "overall" in line_lower or "assessment" in line_lower:
-                    current_section = "assessment"
-                    continue
-
-                if current_section == "summary":
-                    summary += line + "\n"
-                elif current_section == "details":
-                    details += line + "\n"
-                elif current_section == "suggestions":
-                    suggestions += line + "\n"
-                elif current_section == "assessment":
-                    assessment += line + "\n"
+                
+                # Check if line contains any section marker
+                for section, markers in section_markers.items():
+                    if any(marker in line_lower for marker in markers):
+                        # Check if it's a header (often has special chars like #, *, etc.)
+                        if (line_lower.startswith('#') or 
+                            line_lower.startswith('*') or 
+                            line_lower.startswith('-') or
+                            any(f"{num}." in line_lower[:4] for num in range(1, 6))):
+                            section_boundaries.append((i, section))
+                            break
+            
+            # Sort by line number
+            section_boundaries.sort()
+            
+            # Second pass: extract content between section boundaries
+            for i, (line_num, section) in enumerate(section_boundaries):
+                start = line_num + 1  # Skip the header line
+                
+                # If there's a next section, end at that section
+                if i < len(section_boundaries) - 1:
+                    end = section_boundaries[i+1][0]
+                else:
+                    end = len(lines)
+                
+                # Add lines to the appropriate section
+                sections[section].extend(lines[start:end])
+            
+            # If no sections were found, try to intelligently assign content
+            if all(len(content) == 0 for content in sections.values()):
+                for line in lines:
+                    line_lower = line.lower()
+                    # Try to infer which section this belongs to
+                    for section, markers in section_markers.items():
+                        if any(marker in line_lower for marker in markers):
+                            sections[section].append(line)
+                            break
+            
+            # Join the lines for each section
+            summary = "\n".join(sections["summary"])
+            details = "\n".join(sections["details"])
+            suggestions = "\n".join(sections["suggestions"])
+            assessment = "\n".join(sections["assessment"])
 
             # Check if the review is favorable and approve PR if appropriate
             should_approve = False
