@@ -39,7 +39,7 @@ jobs:
                 });
               }
             }
-            
+
             // Remove the needs-triage label if it exists
             try {
               await github.rest.issues.removeLabel({

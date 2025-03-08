@@ -10,52 +10,52 @@ jobs:
   test:
     runs-on: ubuntu-latest
     steps:
-    - uses: actions/checkout@v3
-    
+    - uses: actions/checkout@v4
+
     - name: Set up Python
-      uses: actions/setup-python@v4
+      uses: actions/setup-python@v5
       with:
         python-version: '3.12'
-        
+
     - name: Install Poetry
       uses: snok/install-poetry@v1
       with:
-        version: 1.8.5
+        version: 2.1.1
         virtualenvs-create: true
         virtualenvs-in-project: true
-        
+
     - name: Load cached venv
       id: cached-poetry-dependencies
-      uses: actions/cache@v3
+      uses: actions/cache@v4
       with:
         path: .venv
         key: venv-${{ runner.os }}-${{ hashFiles('**/poetry.lock') }}
-        
+
     - name: Install dependencies
       if: steps.cached-poetry-dependencies.outputs.cache-hit != 'true'
       run: poetry install --no-interaction
-        
+
     - name: Lint with flake8
       run: |
         poetry run flake8 . --count --select=E9,F63,F7,F82 --show-source --statistics --exclude=.venv,venv,*/virtualenvs/*
-        
+
     - name: Type check with mypy
       run: |
         poetry run mypy --ignore-missing-imports .
-        
+
     - name: Test with pytest
       run: |
         poetry run pytest --cov=./ --cov-report=xml
 
   # This job runs the AI PR Review on itself
-  self-test:
+  ai-pr-review:
     runs-on: ubuntu-latest
     if: github.event_name == 'pull_request'
     steps:
-    - uses: actions/checkout@v3
+    - uses: actions/checkout@v4
       with:
         fetch-depth: 0
-        
+
     - name: Self-review
       uses: ./
       with:
@@ -64,16 +64,16 @@ jobs:
         github-token: ${{ secrets.GITHUB_TOKEN }}
         max-files: 15
         auto-approve: true
-        
+
   # This job builds and tests the Docker image
   docker:
     runs-on: ubuntu-latest
     steps:
-    - uses: actions/checkout@v3
-    
+    - uses: actions/checkout@v4
+
     - name: Build Docker image
       run: docker build -t ai-github-action .
-      
+
     - name: Test Docker image
       run: |
         docker run --rm ai-github-action --help || true
