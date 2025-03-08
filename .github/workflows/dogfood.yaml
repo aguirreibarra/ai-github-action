@@ -9,17 +9,17 @@ jobs:
   scan-ai-agents:
     runs-on: arc-runner-set
     steps:
-    - uses: actions/checkout@v3
+    - uses: actions/checkout@v4
     
     - name: Set up Python
-      uses: actions/setup-python@v4
+      uses: actions/setup-python@v5
       with:
         python-version: '3.12'
         
     - name: Install Poetry
       uses: snok/install-poetry@v1
       with:
-        version: 1.8.5
+        version: 2.1.1
         virtualenvs-create: true
         virtualenvs-in-project: true
     
@@ -75,10 +75,10 @@ jobs:
   review-recent-prs:
     runs-on: arc-runner-set
     steps:
-    - uses: actions/checkout@v3
+    - uses: actions/checkout@v4
     
     - name: Set up Python
-      uses: actions/setup-python@v4
+      uses: actions/setup-python@v5
       with:
         python-version: '3.12'
         
@@ -91,7 +91,7 @@ jobs:
     
     - name: Find recent PRs
       id: find_prs
-      uses: actions/github-script@v6
+      uses: actions/github-script@v7
       with:
         github-token: ${{ secrets.GITHUB_TOKEN }}
         script: |
@@ -103,11 +103,11 @@ jobs:
             direction: 'desc',
             per_page: 3
           });
-          
+
           return {
             pr_numbers: prs.data.map(pr => pr.number)
           };
-    
+
     - name: AI PR Review
       uses: ./
       with:
@@ -116,7 +116,7 @@ jobs:
         github-token: ${{ secrets.GITHUB_TOKEN }}
         pr_number: ${{ fromJson(steps.find_prs.outputs.result).pr_numbers[0] }}
         max-files: 10
-      
+
     - name: Summarize Findings
       run: |
         echo "## AI PR Review Findings" >> $GITHUB_STEP_SUMMARY
