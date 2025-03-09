@@ -92,7 +92,7 @@ class PRReviewAction:
 
         return matched_files
 
-    def run(self) -> dict[str, Any]:
+    def run(self) -> None:
         """Run the PR review action."""
         logger.info("Starting PR review action")
         try:
@@ -104,11 +104,7 @@ class PRReviewAction:
 
             if not pr_number or not repo_name:
                 logger.error("Missing required PR information in GitHub event")
-                return {
-                    "summary": "Error: Could not extract PR information from GitHub event",
-                    "details": "Make sure this action is triggered on pull request events",
-                    "suggestions": "",
-                }
+                raise ValueError("Missing required PR information in GitHub event")
 
             # Get PR information using agent
             logger.debug(f"Fetching PR information for {repo_name}#{pr_number}")
@@ -126,11 +122,7 @@ class PRReviewAction:
             matched_files = self._match_files(pr_files)
             if not matched_files:
                 logger.warning("No files matched for review")
-                return {
-                    "summary": "No files to review",
-                    "details": "No files matched the include/exclude patterns or there were no files in the PR",
-                    "suggestions": "",
-                }
+                raise ValueError("No files matched for review")
 
             logger.info(f"Will review {len(matched_files)} files")
 
@@ -214,116 +206,8 @@ class PRReviewAction:
 
             logger.info(f"PR comment {result['action']} with ID {result['id']}")
 
-            # Extract structured data from the response using a more robust approach
-            lines = response["content"].split("\n")
-            sections: dict[str, list[str]] = {
-                "summary": [],
-                "details": [],
-                "suggestions": [],
-                "assessment": [],
-            }
-
-            # Define section markers with variations
-            section_markers = {
-                "summary": ["summary", "changes", "overview", "what changed"],
-                "details": [
-                    "issue",
-                    "bug",
-                    "problem",
-                    "concern",
-                    "potential issues",
-                    "code quality",
-                ],
-                "suggestions": [
-                    "suggest",
-                    "improvement",
-                    "recommend",
-                    "enhancement",
-                    "optimization",
-                ],
-                "assessment": [
-                    "overall",
-                    "assessment",
-                    "conclusion",
-                    "verdict",
-                    "approve",
-                ],
-            }
-
-            # First pass: identify section headers and their line numbers
-            section_boundaries = []
-            logger.debug("Starting first pass: identifying section headers")
-            for i, line in enumerate(lines):
-                line_lower = line.lower()
-
-                # Check if line contains any section marker
-                for section, markers in section_markers.items():
-                    if any(marker in line_lower for marker in markers):
-                        # Check if it's a header (often has special chars like #, *, etc.)
-                        if (
-                            line_lower.startswith("#")
-                            or line_lower.startswith("*")
-                            or line_lower.startswith("-")
-                            or any(f"{num}." in line_lower[:4] for num in range(1, 6))
-                        ):
-                            logger.debug(
-                                f"Found section '{section}' at line {i}: {line.strip()}"
-                            )
-                            section_boundaries.append((i, section))
-                            break
-
-            # Sort by line number
-            section_boundaries.sort()
-            logger.info(
-                f"Identified {len(section_boundaries)} section boundaries: {[s[1] for s in section_boundaries]}"
-            )
-
-            # Second pass: extract content between section boundaries
-            logger.debug("Starting second pass: extracting content between sections")
-            for i, (line_num, section) in enumerate(section_boundaries):
-                start = line_num + 1  # Skip the header line
-
-                # If there's a next section, end at that section
-                if i < len(section_boundaries) - 1:
-                    end = section_boundaries[i + 1][0]
-                else:
-                    end = len(lines)
-
-                logger.debug(
-                    f"Extracting {section} content from lines {start} to {end}"
-                )
-                # Add lines to the appropriate section
-                sections[section].extend(lines[start:end])
-
-            # If no sections were found, try to intelligently assign content
-            if all(len(content) == 0 for content in sections.values()):
-                logger.warning(
-                    "No structured sections found in AI response, attempting to intelligently assign content"
-                )
-                for line in lines:
-                    line_lower = line.lower()
-                    # Try to infer which section this belongs to
-                    for section, markers in section_markers.items():
-                        if any(marker in line_lower for marker in markers):
-                            sections[section].append(line)
-                            break
-
-            # Join the lines for each section
-            summary = "\n".join(sections["summary"])
-            details = "\n".join(sections["details"])
-            suggestions = "\n".join(sections["suggestions"])
-            assessment = "\n".join(sections["assessment"])
-
-            logger.debug(f"Summary length: {len(summary)} characters")
-            logger.debug(f"Details length: {len(details)} characters")
-            logger.debug(f"Suggestions length: {len(suggestions)} characters")
-            logger.debug(f"Assessment length: {len(assessment)} characters")
-
-            # With the tool-based approach, we don't need to parse the assessment
-            # The AI will call the approve_pull_request tool directly if it decides to approve
+            # Check if the AI decided to approve the PR by explicitly calling the approve tool
             should_approve = False
-
-            # We still set this flag to indicate if approval was possible in this run
             auto_approve = os.environ.get("AUTO_APPROVE", "false").lower() == "true"
             logger.info(f"Auto approve setting: {auto_approve}")
 
@@ -340,22 +224,11 @@ class PRReviewAction:
                         "AI explicitly called the approve tool - PR was approved"
                     )
 
-            # Return results
+            # Return results with full conversation data instead of parsed sections
             logger.info(f"Completed PR review. Approved: {should_approve}")
-            return {
-                "summary": summary.strip(),
-                "details": details.strip(),
-                "suggestions": suggestions.strip(),
-                "assessment": assessment.strip(),
-                "approved": should_approve,
-            }
 
         except Exception as e:
             logger.critical(
                 f"Unhandled exception in PR review action: {str(e)}", exc_info=True
             )
-            return {
-                "summary": f"Error reviewing PR: {str(e)}",
-                "details": "An unexpected error occurred while reviewing the PR",
-                "suggestions": "",
-            }
+            raise

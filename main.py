@@ -71,49 +71,16 @@ def main():
     try:
         if action_type == "pr-review":
             action = PRReviewAction(agent, event)
-            results = action.run()
+            action.run()
         elif action_type == "issue-analyze":
             action = IssueAnalyzeAction(agent, event)
-            results = action.run()
+            action.run()
         elif action_type == "code-scan":
             action = CodeScanAction(agent, event)
-            results = action.run()
+            action.run()
         else:
             logger.error(f"Unknown action type: {action_type}")
             sys.exit(1)
-
-        # Set outputs
-        if results:
-            with open(os.environ.get("GITHUB_OUTPUT", "/dev/null"), "a") as f:
-                # Use GitHub's multiline output format with delimiters
-                # https://docs.github.com/en/actions/using-workflows/workflow-commands-for-github-actions#multiline-strings
-
-                # Write summary
-                summary = results.get("summary", "")
-                if summary:
-                    f.write("summary<<EOF\n")
-                    f.write(f"{summary}\n")
-                    f.write("EOF\n")
-                else:
-                    f.write("summary=\n")
-
-                # Write details
-                details = results.get("details", "")
-                if details:
-                    f.write("details<<EOF\n")
-                    f.write(f"{details}\n")
-                    f.write("EOF\n")
-                else:
-                    f.write("details=\n")
-
-                # Write suggestions
-                suggestions = results.get("suggestions", "")
-                if suggestions:
-                    f.write("suggestions<<EOF\n")
-                    f.write(f"{suggestions}\n")
-                    f.write("EOF\n")
-                else:
-                    f.write("suggestions=\n")
 
         logger.info("Action completed successfully")
 

@@ -6,6 +6,7 @@ All notable changes to this project will be documented in this file.
 
 ### Added
 - Comprehensive unit tests for PR review action functionality
+- Direct issue creation in code scan action instead of returning output data
 
 ### Changed
 - Improved file prioritization in PR review action - files are now sorted by number of changes
@@ -14,6 +15,13 @@ All notable changes to this project will be documented in this file.
 - Improved logging for PR review process
 - Completely redesigned auto-approval mechanism to use direct tool calls instead of text parsing
 - Updated GitHub agent to properly capture and return tool calls information
+- Changed action methods to return None instead of dictionaries with output data
+- Simplified workflow examples by removing unnecessary output handling
+
+### Removed
+- Removed outputs section from action.yml
+- Removed detailed output parsing in PR reviews, issue analysis and code scan actions
+- Removed complex output formatting logic in main.py
 
 ### Fixed
 - Fixed potential issues with files exceeding max_files limit
