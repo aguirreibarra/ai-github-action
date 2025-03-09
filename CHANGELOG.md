@@ -12,10 +12,13 @@ All notable changes to this project will be documented in this file.
 - Enhanced section parsing logic for more robust extraction of review content
 - Added better error handling for individual file processing in PR reviews
 - Improved logging for PR review process
+- Completely redesigned auto-approval mechanism to use direct tool calls instead of text parsing
+- Updated GitHub agent to properly capture and return tool calls information
 
 ### Fixed
 - Fixed potential issues with files exceeding max_files limit
 - Fixed section detection in AI responses that could miss certain section headers
+- Fixed reliability issues with PR auto-approval by moving to a direct tool call approach
 
 ## [1.0.0] - Initial Release
 

@@ -125,6 +125,16 @@ class PRReviewAction:
                     )
 
             # Construct message for the agent
+            auto_approve = os.environ.get("AUTO_APPROVE", "false").lower() == "true"
+            approval_instruction = ""
+            
+            if auto_approve:
+                approval_instruction = (
+                    f"\n\n6. If you believe the PR should be approved, explicitly call the approve_pull_request tool with: "
+                    f"repo=\"{repo_name}\", pr_number={pr_number}, and an appropriate approval message. "
+                    f"Only call this tool if you're confident the PR meets quality standards and is ready to merge."
+                )
+
             message = (
                 f"Please review this pull request:\n\n"
                 f"Title: {pr_info.get('title', 'No title')}\n"
@@ -137,6 +147,7 @@ class PRReviewAction:
                 f"3. Potential issues or bugs\n"
                 f"4. Suggestions for improvement\n"
                 f"5. Overall assessment (approve, request changes, comment)"
+                f"{approval_instruction}"
             )
 
             # Process message with agent
@@ -245,39 +256,21 @@ class PRReviewAction:
             suggestions = "\n".join(sections["suggestions"])
             assessment = "\n".join(sections["assessment"])
 
-            # Check if the review is favorable and approve PR if appropriate
+            # With the tool-based approach, we don't need to parse the assessment
+            # The AI will call the approve_pull_request tool directly if it decides to approve
             should_approve = False
+            
+            # We still set this flag to indicate if approval was possible in this run
             auto_approve = os.environ.get("AUTO_APPROVE", "false").lower() == "true"
-
-            if auto_approve and assessment:
-                assessment_lower = assessment.lower()
-                if "approve" in assessment_lower and not any(
-                    term in assessment_lower
-                    for term in [
-                        "not approve",
-                        "don't approve",
-                        "cannot approve",
-                        "wouldn't approve",
-                    ]
-                ):
+            
+            # Check response for any tool calls made by the AI
+            tool_calls = response.get("tool_calls", [])
+            
+            for tool_call in tool_calls:
+                if tool_call.get("name") == "approve_pull_request":
+                    # The AI decided to approve by explicitly calling the tool
                     should_approve = True
-                    logger.info("Review is favorable, approving PR")
-
-                    # Approve the PR
-                    try:
-                        approval_result = self.agent.execute_tool(
-                            "approve_pull_request",
-                            {
-                                "repo": repo_name,
-                                "pr_number": pr_number,
-                                "body": "Approved based on AI review assessment",
-                            },
-                        )
-                        logger.info(
-                            f"PR approved with review ID {approval_result['id']}"
-                        )
-                    except Exception as e:
-                        logger.error(f"Failed to approve PR: {str(e)}")
+                    logger.info("AI explicitly called the approve tool - PR was approved")
 
             # Return results
             return {

@@ -169,9 +169,9 @@ class TestPRReviewAction(unittest.TestCase):
         self.assertFalse(result["approved"])  # Should be False since AUTO_APPROVE is false
 
     @patch.dict(os.environ, {"AUTO_APPROVE": "true"})
-    def test_run_with_auto_approve(self):
-        """Test PR review run with auto-approve enabled."""
-        # Mock agent responses similar to test_run_success
+    def test_run_with_auto_approve_tool_call(self):
+        """Test PR review run with auto-approve enabled using tool calls."""
+        # Mock agent responses
         self.agent.execute_tool.side_effect = [
             # get_pull_request
             {"title": "Test PR", "body": "This is a test PR"},
@@ -181,16 +181,23 @@ class TestPRReviewAction(unittest.TestCase):
             "+ print('Added line')\n- print('Removed line')",
             # update_or_create_pr_comment
             {"id": 456, "action": "created"},
-            # approve_pull_request
-            {"id": 789, "state": "APPROVED"},
         ]
         
-        # Mock process_message response with positive review
+        # Mock process_message response with tool call for approve_pull_request
         self.agent.process_message.return_value = {
-            "content": (
-                "# Summary\nGood changes.\n\n"
-                "# Overall Assessment\nI approve this PR."
-            )
+            "content": "# Summary\nGood changes.\n\n# Overall Assessment\nI believe this PR should be approved.",
+            "tool_calls": [
+                {
+                    "id": "call_abc123",
+                    "type": "function",
+                    "name": "approve_pull_request",
+                    "arguments": {
+                        "repo": "owner/repo",
+                        "pr_number": 123,
+                        "body": "Approved based on code quality and implementation"
+                    }
+                }
+            ]
         }
         
         action = PRReviewAction(self.agent, self.event)
@@ -198,13 +205,6 @@ class TestPRReviewAction(unittest.TestCase):
         
         # Check that the PR was approved
         self.assertTrue(result["approved"])
-        
-        # Verify approve_pull_request was called
-        approve_call = next(
-            call for call in self.agent.execute_tool.call_args_list 
-            if call[0][0] == "approve_pull_request"
-        )
-        self.assertIsNotNone(approve_call)
 
     def test_run_missing_pr_info(self):
         """Test handling of missing PR information."""

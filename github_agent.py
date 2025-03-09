@@ -162,6 +162,7 @@ class GitHubAgent:
                     return {
                         "content": "I've reached the maximum number of operations. Please break down your request into smaller steps.",
                         "conversation_history": messages,
+                        "tool_calls": []  # Empty tool_calls for consistency
                     }
 
                 iteration_count += 1
@@ -220,15 +221,30 @@ class GitHubAgent:
                     # Continue the conversation with tool results
                     continue
 
-                # Return the final response
-                return {
+                # Return the final response with tool calls if any were made
+                response_data = {
                     "content": assistant_message.content,
                     "conversation_history": messages,
                 }
+                
+                # Include tool calls in the response if they exist
+                if assistant_message.tool_calls:
+                    response_data["tool_calls"] = [
+                        {
+                            "id": tc.id,
+                            "type": tc.type,
+                            "name": tc.function.name,
+                            "arguments": json.loads(tc.function.arguments)
+                        }
+                        for tc in assistant_message.tool_calls
+                    ]
+                
+                return response_data
 
             except Exception as e:
                 logger.error(f"Error calling OpenAI API: {str(e)}")
                 return {
                     "content": f"Error: {str(e)}",
                     "conversation_history": messages,
+                    "tool_calls": []  # Empty tool_calls for consistency
                 }

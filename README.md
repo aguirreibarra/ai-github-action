@@ -128,7 +128,7 @@ jobs:
 
 ## Automatic PR Approval
 
-When the `auto-approve` parameter is set to `true`, the action will automatically approve pull requests where the AI review is favorable. This is determined by analyzing the review content for approval language.
+When the `auto-approve` parameter is set to `true`, the action will allow the AI to directly approve pull requests that it determines meet quality standards. Rather than relying on simplistic text pattern matching, the AI will explicitly call the approval tool when it deems a PR ready to merge.
 
 ```yaml
 name: AI PR Review with Auto-Approval
