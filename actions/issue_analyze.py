@@ -1,5 +1,7 @@
 import logging
-from typing import Dict, Any
+from typing import Any
+
+from github_agent import GitHubAgent
 
 logger = logging.getLogger("issue-analyze-action")
 
@@ -7,7 +9,7 @@ logger = logging.getLogger("issue-analyze-action")
 class IssueAnalyzeAction:
     """Action for analyzing GitHub issues."""
 
-    def __init__(self, agent, event):
+    def __init__(self, agent: GitHubAgent, event: dict[str, Any]):
         """Initialize the issue analysis action.
 
         Args:

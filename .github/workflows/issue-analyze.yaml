@@ -17,30 +17,11 @@ jobs:
           openai-api-key: ${{ secrets.OPENAI_API_KEY }}
           github-token: ${{ secrets.GITHUB_TOKEN }}
 
-      - name: Apply labels based on analysis
+      - name: Remove needs-triage label
         uses: actions/github-script@v7
-        if: ${{ success() }}
         with:
           github-token: ${{ secrets.GITHUB_TOKEN }}
           script: |
-            const suggestions = process.env.SUGGESTIONS || '';
-            
-            // Parse suggested labels from the AI response
-            const labelMatches = suggestions.match(/labels?:\s*([a-z-,\s]+)/i);
-            if (labelMatches && labelMatches[1]) {
-              const labels = labelMatches[1].split(',').map(l => l.trim());
-
-              if (labels.length > 0) {
-                await github.rest.issues.addLabels({
-                  owner: context.repo.owner,
-                  repo: context.repo.repo,
-                  issue_number: context.issue.number,
-                  labels: labels
-                });
-              }
-            }
-
-            // Remove the needs-triage label if it exists
             try {
               await github.rest.issues.removeLabel({
                 owner: context.repo.owner,
@@ -51,5 +32,3 @@ jobs:
             } catch (e) {
               // Label might not exist, that's okay
             }
-        env:
-          SUGGESTIONS: ${{ steps.analyze.outputs.suggestions }}

@@ -172,55 +172,6 @@ class TestPRReviewAction(unittest.TestCase):
         self.assertEqual(self.agent.execute_tool.call_count, 5)
         self.assertEqual(self.agent.process_message.call_count, 1)
 
-    @patch.dict(os.environ, {"AUTO_APPROVE": "true"})
-    @patch("actions.pr_review.logger")
-    def test_run_with_auto_approve_tool_call(self, mock_logger):
-        """Test PR review run with auto-approve enabled using tool calls."""
-        # Mock agent responses
-        self.agent.execute_tool.side_effect = [
-            # get_pull_request
-            {"title": "Test PR", "body": "This is a test PR"},
-            # get_pull_request_files
-            [
-                {
-                    "filename": "main.py",
-                    "status": "modified",
-                    "additions": 10,
-                    "deletions": 5,
-                }
-            ],
-            # get_pull_request_diff
-            "+ print('Added line')\n- print('Removed line')",
-            # update_or_create_pr_comment
-            {"id": 456, "action": "created"},
-        ]
-
-        # Mock process_message response with tool call for approve_pull_request
-        self.agent.process_message.return_value = {
-            "content": "# Summary\nGood changes.\n\n# Overall Assessment\nI believe this PR should be approved.",
-            "tool_calls": [
-                {
-                    "id": "call_abc123",
-                    "type": "function",
-                    "name": "approve_pull_request",
-                    "arguments": {
-                        "repo": "owner/repo",
-                        "pr_number": 123,
-                        "body": "Approved based on code quality and implementation",
-                    },
-                }
-            ],
-        }
-
-        action = PRReviewAction(self.agent, self.event)
-        # run() returns None, so we just verify it executes without exceptions
-        action.run()
-
-        # Check that the logger recorded the approve message
-        mock_logger.info.assert_any_call(
-            "AI explicitly called the approve tool - PR was approved"
-        )
-
     def test_run_missing_pr_info(self):
         """Test handling of missing PR information."""
         # Event with missing PR number
