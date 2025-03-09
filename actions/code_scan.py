@@ -1,7 +1,9 @@
 import fnmatch
 import os
 import logging
-from typing import Dict, Any, List
+from typing import Any, List
+
+from github_agent import GitHubAgent
 
 logger = logging.getLogger("code-scan-action")
 
@@ -9,7 +11,7 @@ logger = logging.getLogger("code-scan-action")
 class CodeScanAction:
     """Action for scanning code repositories."""
 
-    def __init__(self, agent, event):
+    def __init__(self, agent: GitHubAgent, event: dict[str, Any]):
         """Initialize the code scan action.
 
         Args:
