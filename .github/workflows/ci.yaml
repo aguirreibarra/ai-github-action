@@ -67,7 +67,7 @@ jobs:
         auto-approve: true
         model: o3-mini
       env:
-        LOG_LEVEL: DEBUG
+        LOG_LEVEL: INFO
 
   # This job builds and tests the Docker image
   docker:

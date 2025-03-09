@@ -116,7 +116,7 @@ class PRReviewAction:
 
             logger.info(f"Will review {len(matched_files)} files")
 
-            # Get PR diff for filtered files using a more efficient approach
+            # Get PR diff for filtered files
             pr_diff = ""
 
             # First, get all the filenames
@@ -214,7 +214,6 @@ class PRReviewAction:
                         "AI explicitly called the approve tool - PR was approved"
                     )
 
-            # Return results with full conversation data instead of parsed sections
             logger.info(f"Completed PR review. Approved: {should_approve}")
 
         except Exception as e:
