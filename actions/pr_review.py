@@ -8,7 +8,19 @@ logger = logging.getLogger("pr-review-action")
 
 
 class PRReviewAction:
-    """Action for reviewing pull requests."""
+    """Action for reviewing pull requests.
+
+    Logging Strategy:
+    - DEBUG: Implementation details useful for troubleshooting
+    - INFO: High-level workflow progress and main operations
+    - WARNING: Potential issues that don't prevent operation
+    - ERROR: Issues that prevent normal operation
+    - CRITICAL: Severe failures
+
+    Set LOG_LEVEL environment variable to control verbosity:
+    - Production environments: INFO or WARNING
+    - Development/testing: DEBUG
+    """
 
     def __init__(self, agent, event):
         """Initialize the PR review action.
@@ -43,7 +55,7 @@ class PRReviewAction:
         logger.info(f"Matching files. Total files to process: {len(files)}")
         if not self.include_patterns and not self.exclude_patterns:
             logger.debug(
-                "No patterns specified, returning first {self.max_files} files"
+                f"No patterns specified, returning first {self.max_files} files"
             )
             return files[: self.max_files]
 
@@ -76,7 +88,7 @@ class PRReviewAction:
             )
             matched_files = matched_files[: self.max_files]
         else:
-            logger.info(f"Found {len(matched_files)} matched files")
+            logger.debug(f"Found {len(matched_files)} matched files")
 
         return matched_files
 
@@ -127,7 +139,7 @@ class PRReviewAction:
 
             # First, get all the filenames
             filenames = [file["filename"] for file in matched_files]
-            logger.info(
+            logger.debug(
                 f"Getting diffs for {len(filenames)} files: {', '.join(filenames[:3])}{'...' if len(filenames) > 3 else ''}"
             )
 
