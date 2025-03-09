@@ -1,9 +1,8 @@
 import json
 import logging
 import os
-from typing import Dict, List, Optional, Any, cast, Iterable
+from typing import Dict, List, Optional, Any, cast
 import openai
-from openai.types.chat import ChatCompletion
 from github import Github
 
 # Define a type for OpenAI tool parameters
@@ -13,8 +12,6 @@ from tools.github_tools import (
     GetPullRequestTool,
     GetPullRequestFilesTool,
     GetPullRequestDiffTool,
-    AddPullRequestCommentTool,
-    ListPullRequestCommentsTool,
     UpdateOrCreatePullRequestCommentTool,
     GetRepositoryTool,
     GetIssueTool,
@@ -65,8 +62,6 @@ class GitHubAgent:
             GetPullRequestTool(self.github),
             GetPullRequestFilesTool(self.github),
             GetPullRequestDiffTool(self.github),
-            AddPullRequestCommentTool(self.github),
-            ListPullRequestCommentsTool(self.github),
             UpdateOrCreatePullRequestCommentTool(self.github),
             GetRepositoryTool(self.github),
             GetIssueTool(self.github),

@@ -85,7 +85,7 @@ class CodeScanAction:
 
         return files_to_scan[: self.max_files]
 
-    def run(self) -> Dict[str, Any]:
+    def run(self) -> None:
         """Run the code scan action."""
         try:
             # Extract repository information from event
@@ -93,11 +93,9 @@ class CodeScanAction:
 
             if not repo_name:
                 logger.error("Missing required repository information in GitHub event")
-                return {
-                    "summary": "Error: Could not extract repository information from GitHub event",
-                    "details": "Make sure this action is triggered on repository events",
-                    "suggestions": "",
-                }
+                raise ValueError(
+                    "Missing required repository information in GitHub event"
+                )
 
             # Get repository information
             repo_info = self.agent.execute_tool("get_repository", {"repo": repo_name})
@@ -149,48 +147,16 @@ class CodeScanAction:
             context = f"Code scan for {repo_name}"
             response = self.agent.process_message(message, context)
 
-            # Create or update a file in the repository with the results
-            # Note: This would require write permissions and should be optional
-
-            # Extract structured data from the response
-            lines = response["content"].split("\n")
-            summary = ""
-            details = ""
-            suggestions = ""
-
-            current_section = None
-            for line in lines:
-                if "summary" in line.lower() or "structure" in line.lower():
-                    current_section = "summary"
-                    continue
-                elif (
-                    "vulnerabilit" in line.lower()
-                    or "issue" in line.lower()
-                    or "quality" in line.lower()
-                ):
-                    current_section = "details"
-                    continue
-                elif (
-                    "recommend" in line.lower()
-                    or "best practice" in line.lower()
-                    or "suggest" in line.lower()
-                ):
-                    current_section = "suggestions"
-                    continue
-
-                if current_section == "summary":
-                    summary += line + "\n"
-                elif current_section == "details":
-                    details += line + "\n"
-                elif current_section == "suggestions":
-                    suggestions += line + "\n"
-
-            # Return results
-            return {
-                "summary": summary.strip(),
-                "details": details.strip(),
-                "suggestions": suggestions.strip(),
-            }
+            # Create an issue with the results
+            self.agent.execute_tool(
+                "create_issue",
+                {
+                    "repo": repo_name,
+                    "title": "Code Scan Results",
+                    "body": response["content"],
+                    "labels": ["code-scan"],
+                },
+            )
 
         except Exception as e:
             logger.error(f"Error running code scan action: {str(e)}")

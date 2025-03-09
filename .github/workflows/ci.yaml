@@ -51,6 +51,7 @@ jobs:
   ai-pr-review:
     runs-on: ubuntu-latest
     if: github.event_name == 'pull_request'
+    needs: test
     steps:
     - uses: actions/checkout@v4
       with:
@@ -65,6 +66,8 @@ jobs:
         max-files: 15
         auto-approve: true
         model: o3-mini
+      env:
+        LOG_LEVEL: DEBUG
 
   # This job builds and tests the Docker image
   docker:

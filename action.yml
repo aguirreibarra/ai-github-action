@@ -37,14 +37,6 @@ inputs:
     required: false
     default: 'false'
 
-outputs:
-  summary:
-    description: 'Summary of the action results'
-  details:
-    description: 'Detailed report of the action results'
-  suggestions:
-    description: 'Suggested improvements or changes'
-
 runs:
   using: 'docker'
   image: 'Dockerfile'

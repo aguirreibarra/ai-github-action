@@ -125,6 +125,31 @@ jobs:
 | `include-patterns` | Glob patterns for files to include | No | - |
 | `exclude-patterns` | Glob patterns for files to exclude | No | - |
 | `auto-approve` | Automatically approve PRs with favorable reviews | No | false |
+| `LOG_LEVEL` | Logging level (DEBUG, INFO, WARNING, ERROR, CRITICAL) | No | INFO |
+
+## Debugging with LOG_LEVEL
+
+You can control the verbosity of logs by setting the `LOG_LEVEL` environment variable in your workflow:
+
+```yaml
+jobs:
+  review:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: AI PR Review
+        uses: aguirreibarra/ai-github-action@main
+        with:
+          action-type: pr-review
+          openai-api-key: ${{ secrets.OPENAI_API_KEY }}
+          github-token: ${{ secrets.GITHUB_TOKEN }}
+        env:
+          LOG_LEVEL: DEBUG  # Set to DEBUG, INFO, WARNING, ERROR, or CRITICAL
+```
+
+- Use `DEBUG` for maximum verbosity when troubleshooting issues
+- Use `INFO` for normal operations (default)
+- Use `WARNING` or `ERROR` to reduce log output in production environments
 
 ## Automatic PR Approval
 

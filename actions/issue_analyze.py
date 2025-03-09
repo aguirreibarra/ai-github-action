@@ -17,7 +17,7 @@ class IssueAnalyzeAction:
         self.agent = agent
         self.event = event
 
-    def run(self) -> Dict[str, Any]:
+    def run(self) -> None:
         """Run the issue analysis action."""
         try:
             # Extract issue information from event
@@ -26,11 +26,7 @@ class IssueAnalyzeAction:
 
             if not issue_number or not repo_name:
                 logger.error("Missing required issue information in GitHub event")
-                return {
-                    "summary": "Error: Could not extract issue information from GitHub event",
-                    "details": "Make sure this action is triggered on issue events",
-                    "suggestions": "",
-                }
+                raise ValueError("Missing required issue information in GitHub event")
 
             # Get issue information using agent
             issue_info = self.agent.execute_tool(
@@ -69,42 +65,6 @@ class IssueAnalyzeAction:
                     "body": f"## AI Issue Analysis\n\n{response['content']}",
                 },
             )
-
-            # Extract structured data from the response
-            lines = response["content"].split("\n")
-            summary = ""
-            details = ""
-            suggestions = ""
-
-            current_section = None
-            for line in lines:
-                if "summary" in line.lower():
-                    current_section = "summary"
-                    continue
-                elif "analysis" in line.lower():
-                    current_section = "details"
-                    continue
-                elif (
-                    "suggest" in line.lower()
-                    or "next step" in line.lower()
-                    or "recommend" in line.lower()
-                ):
-                    current_section = "suggestions"
-                    continue
-
-                if current_section == "summary":
-                    summary += line + "\n"
-                elif current_section == "details":
-                    details += line + "\n"
-                elif current_section == "suggestions":
-                    suggestions += line + "\n"
-
-            # Return results
-            return {
-                "summary": summary.strip(),
-                "details": details.strip(),
-                "suggestions": suggestions.strip(),
-            }
 
         except Exception as e:
             logger.error(f"Error running issue analysis action: {str(e)}")

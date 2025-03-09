@@ -23,7 +23,7 @@ class TestPRReviewAction(unittest.TestCase):
     def test_init(self):
         """Test initialization of the PR review action."""
         action = PRReviewAction(self.agent, self.event)
-        
+
         # Check initialization
         self.assertEqual(action.agent, self.agent)
         self.assertEqual(action.event, self.event)
@@ -34,11 +34,11 @@ class TestPRReviewAction(unittest.TestCase):
     def test_parse_patterns(self):
         """Test pattern parsing."""
         action = PRReviewAction(self.agent, self.event)
-        
+
         # Test with comma-separated patterns
         patterns = action._parse_patterns("*.py,*.js, *.jsx")
         self.assertEqual(patterns, ["*.py", "*.js", "*.jsx"])
-        
+
         # Test with empty string
         patterns = action._parse_patterns("")
         self.assertEqual(patterns, [])
@@ -46,7 +46,7 @@ class TestPRReviewAction(unittest.TestCase):
     def test_match_files(self):
         """Test file matching based on patterns."""
         action = PRReviewAction(self.agent, self.event)
-        
+
         # Test files
         files = [
             {"filename": "main.py", "changes": 10},
@@ -56,29 +56,29 @@ class TestPRReviewAction(unittest.TestCase):
             {"filename": "styles.css", "changes": 20},
             {"filename": "utils.py", "changes": 3},
         ]
-        
+
         # Match files
         matched = action._match_files(files)
-        
+
         # Should match main.py, script.js, and utils.py (not README.md or test_utils.py)
         # And max_files is 5, so all 3 matching files should be included
         self.assertEqual(len(matched), 3)
-        
+
         # Get filenames to check inclusion/exclusion
         filenames = [f["filename"] for f in matched]
-        
+
         # Verify correct files are included
         self.assertIn("main.py", filenames)
-        self.assertIn("script.js", filenames) 
+        self.assertIn("script.js", filenames)
         self.assertIn("utils.py", filenames)
-        
+
         # Verify that exclusion patterns are working (README.md and test_utils.py excluded)
         self.assertNotIn("README.md", filenames)
         self.assertNotIn("test_utils.py", filenames)
-        
+
         # Verify that non-matching files are excluded (styles.css)
         self.assertNotIn("styles.css", filenames)
-        
+
         # Now verify the order (files should be sorted by changes)
         # We can't run this test directly since the order is determined by
         # a sort operation, which might be unstable for equal values
@@ -91,17 +91,17 @@ class TestPRReviewAction(unittest.TestCase):
     def test_match_files_respects_max_files(self):
         """Test that file matching respects the max_files limit."""
         action = PRReviewAction(self.agent, self.event)
-        
+
         # Test files
         files = [
             {"filename": "main.py", "changes": 10},
             {"filename": "script.js", "changes": 15},
             {"filename": "utils.py", "changes": 3},
         ]
-        
+
         # Match files
         matched = action._match_files(files)
-        
+
         # Should only include top 2 files by changes
         self.assertEqual(len(matched), 2)
         self.assertEqual(matched[0]["filename"], "script.js")  # Highest changes first
@@ -111,17 +111,17 @@ class TestPRReviewAction(unittest.TestCase):
     def test_match_files_no_patterns(self):
         """Test file matching with no patterns."""
         action = PRReviewAction(self.agent, self.event)
-        
+
         # Test files
         files = [
             {"filename": "main.py", "changes": 10},
             {"filename": "README.md", "changes": 5},
             {"filename": "script.js", "changes": 15},
         ]
-        
+
         # Match files
         matched = action._match_files(files)
-        
+
         # Should include all files up to max_files (5)
         self.assertEqual(len(matched), 3)
 
@@ -133,8 +133,18 @@ class TestPRReviewAction(unittest.TestCase):
             {"title": "Test PR", "body": "This is a test PR"},
             # get_pull_request_files
             [
-                {"filename": "main.py", "status": "modified", "additions": 10, "deletions": 5},
-                {"filename": "utils.js", "status": "added", "additions": 20, "deletions": 0},
+                {
+                    "filename": "main.py",
+                    "status": "modified",
+                    "additions": 10,
+                    "deletions": 5,
+                },
+                {
+                    "filename": "utils.js",
+                    "status": "added",
+                    "additions": 20,
+                    "deletions": 0,
+                },
             ],
             # get_pull_request_diff for main.py
             "+ print('Added line')\n- print('Removed line')",
@@ -143,7 +153,7 @@ class TestPRReviewAction(unittest.TestCase):
             # update_or_create_pr_comment
             {"id": 456, "action": "created"},
         ]
-        
+
         # Mock process_message response
         self.agent.process_message.return_value = {
             "content": (
@@ -153,36 +163,38 @@ class TestPRReviewAction(unittest.TestCase):
                 "# Overall Assessment\nApprove this PR."
             )
         }
-        
+
         action = PRReviewAction(self.agent, self.event)
-        result = action.run()
-        
+        # run() returns None, so we just call it to make sure it doesn't raise exceptions
+        action.run()
+
         # Check that agent was called correctly
         self.assertEqual(self.agent.execute_tool.call_count, 5)
         self.assertEqual(self.agent.process_message.call_count, 1)
-        
-        # Check that the result is formatted correctly
-        self.assertEqual(result["summary"], "This PR adds a test function to utils.js and modifies main.py.")
-        self.assertEqual(result["details"], "Code looks good.")
-        self.assertEqual(result["suggestions"], "Consider adding tests.")
-        self.assertEqual(result["assessment"], "Approve this PR.")
-        self.assertFalse(result["approved"])  # Should be False since AUTO_APPROVE is false
 
     @patch.dict(os.environ, {"AUTO_APPROVE": "true"})
-    def test_run_with_auto_approve_tool_call(self):
+    @patch("actions.pr_review.logger")
+    def test_run_with_auto_approve_tool_call(self, mock_logger):
         """Test PR review run with auto-approve enabled using tool calls."""
         # Mock agent responses
         self.agent.execute_tool.side_effect = [
             # get_pull_request
             {"title": "Test PR", "body": "This is a test PR"},
             # get_pull_request_files
-            [{"filename": "main.py", "status": "modified", "additions": 10, "deletions": 5}],
+            [
+                {
+                    "filename": "main.py",
+                    "status": "modified",
+                    "additions": 10,
+                    "deletions": 5,
+                }
+            ],
             # get_pull_request_diff
             "+ print('Added line')\n- print('Removed line')",
             # update_or_create_pr_comment
             {"id": 456, "action": "created"},
         ]
-        
+
         # Mock process_message response with tool call for approve_pull_request
         self.agent.process_message.return_value = {
             "content": "# Summary\nGood changes.\n\n# Overall Assessment\nI believe this PR should be approved.",
@@ -194,30 +206,32 @@ class TestPRReviewAction(unittest.TestCase):
                     "arguments": {
                         "repo": "owner/repo",
                         "pr_number": 123,
-                        "body": "Approved based on code quality and implementation"
-                    }
+                        "body": "Approved based on code quality and implementation",
+                    },
                 }
-            ]
+            ],
         }
-        
+
         action = PRReviewAction(self.agent, self.event)
-        result = action.run()
-        
-        # Check that the PR was approved
-        self.assertTrue(result["approved"])
+        # run() returns None, so we just verify it executes without exceptions
+        action.run()
+
+        # Check that the logger recorded the approve message
+        mock_logger.info.assert_any_call(
+            "AI explicitly called the approve tool - PR was approved"
+        )
 
     def test_run_missing_pr_info(self):
         """Test handling of missing PR information."""
         # Event with missing PR number
         event_missing_pr = {"repository": {"full_name": "owner/repo"}}
-        
+
         action = PRReviewAction(self.agent, event_missing_pr)
-        result = action.run()
-        
-        # Should return error
-        self.assertIn("Error", result["summary"])
-        self.assertEqual(result["details"], "Make sure this action is triggered on pull request events")
-        
+
+        # Should raise a ValueError
+        with self.assertRaises(ValueError):
+            action.run()
+
         # No agent calls should be made
         self.agent.execute_tool.assert_not_called()
 
