@@ -3,26 +3,16 @@ import os
 import logging
 from typing import Any
 
+from github_agent import GitHubAgent
+
 # Configure logger
 logger = logging.getLogger("pr-review-action")
 
 
 class PRReviewAction:
-    """Action for reviewing pull requests.
+    """Action for reviewing pull requests."""
 
-    Logging Strategy:
-    - DEBUG: Implementation details useful for troubleshooting
-    - INFO: High-level workflow progress and main operations
-    - WARNING: Potential issues that don't prevent operation
-    - ERROR: Issues that prevent normal operation
-    - CRITICAL: Severe failures
-
-    Set LOG_LEVEL environment variable to control verbosity:
-    - Production environments: INFO or WARNING
-    - Development/testing: DEBUG
-    """
-
-    def __init__(self, agent, event):
+    def __init__(self, agent: GitHubAgent, event: dict[str, Any]):
         """Initialize the PR review action.
 
         Args:
