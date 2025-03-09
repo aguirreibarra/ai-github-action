@@ -10,11 +10,19 @@ from actions.issue_analyze import IssueAnalyzeAction
 from actions.code_scan import CodeScanAction
 
 # Configure logging
+# Get log level from environment variable, default to INFO
+log_level_name = os.environ.get("LOG_LEVEL", "INFO").upper()
+log_level = getattr(logging, log_level_name, logging.INFO)
+
+# Configure root logger - this affects all loggers in the application
 logging.basicConfig(
-    level=logging.INFO,
+    level=log_level,
     format="%(asctime)s - %(name)s - %(levelname)s - %(message)s",
 )
+
+# Get our main logger
 logger = logging.getLogger("ai-github-action")
+logger.info(f"Logging initialized with level: {logging.getLevelName(log_level)}")
 
 
 def get_github_event():
