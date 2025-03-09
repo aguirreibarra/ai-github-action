@@ -11,10 +11,7 @@ AI GitHub Action leverages the AI Agents framework to create intelligent GitHub 
 - Automated PR reviews with code quality feedback
 - Issue analysis and suggested responses
 - Code scanning for security vulnerabilities and best practices
-- Repository statistics and insights
 - Customizable AI prompts for different contexts
-- Poetry dependency management for consistent environments
-- Update existing PR review comments instead of creating new ones
 
 ## Usage
 
@@ -34,7 +31,7 @@ on:
       - '.github/**'
 
 jobs:
-  review:
+  pr-review:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
@@ -44,17 +41,9 @@ jobs:
       - name: AI PR Review
         uses: aguirreibarra/ai-github-action@main
         with:
-          # Core configuration
           action-type: pr-review
           openai-api-key: ${{ secrets.OPENAI_API_KEY }}
           github-token: ${{ secrets.GITHUB_TOKEN }}
-          
-          # Optional configuration
-          model: "gpt-4o"
-          max-files: 15
-          include-patterns: "*.py,*.js,*.ts,*.jsx,*.tsx,*.java"
-          exclude-patterns: "**/__tests__/**,**/test/**,**/dist/**"
-          auto-approve: "false"
 ```
 
 The PR Review Action will analyze pull requests and post feedback as a comment. When triggered multiple times on the same PR (e.g., after new commits), it will update its existing comment instead of creating a new one, keeping the PR timeline clean.
@@ -62,11 +51,13 @@ The PR Review Action will analyze pull requests and post feedback as a comment. 
 #### Advanced PR Review Features
 
 - **Smart File Prioritization**: When a PR contains more files than the `max-files` limit, the action automatically prioritizes files with the most changes
-- **Error Handling**: Fails gracefully if specific files can't be retrieved or processed
 - **Customizable System Prompt**: Guide the AI's focus towards specific aspects like security, performance, or code style
 - **Automatic Approval**: Optionally approve PRs automatically when the AI review is favorable
 
 ### Issue Analyzer Action
+
+> **Warning**  
+> This action is currently under construction and may not be fully functional
 
 ```yaml
 name: AI Issue Analysis
@@ -78,6 +69,7 @@ on:
 jobs:
   analyze:
     runs-on: ubuntu-latest
+    if: github.event.action == 'opened' || contains(github.event.issue.labels.*.name, 'needs-triage')
     steps:
       - name: AI Issue Analysis
         uses: aguirreibarra/ai-github-action@main
@@ -85,9 +77,28 @@ jobs:
           action-type: issue-analyze
           openai-api-key: ${{ secrets.OPENAI_API_KEY }}
           github-token: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Remove needs-triage label
+        uses: actions/github-script@v7
+        with:
+          github-token: ${{ secrets.GITHUB_TOKEN }}
+          script: |
+            try {
+              await github.rest.issues.removeLabel({
+                owner: context.repo.owner,
+                repo: context.repo.repo,
+                issue_number: context.issue.number,
+                name: 'needs-triage'
+              });
+            } catch (e) {
+              // Label might not exist, that's okay
+            }
 ```
 
 ### Code Scanning Action
+
+> **Warning**  
+> This action is currently under construction and may not be fully functional
 
 ```yaml
 name: AI Code Scan
@@ -125,7 +136,6 @@ jobs:
 | `include-patterns` | Glob patterns for files to include | No | - |
 | `exclude-patterns` | Glob patterns for files to exclude | No | - |
 | `auto-approve` | Automatically approve PRs with favorable reviews | No | false |
-| `LOG_LEVEL` | Logging level (DEBUG, INFO, WARNING, ERROR, CRITICAL) | No | INFO |
 
 ## Debugging with LOG_LEVEL
 
@@ -201,40 +211,6 @@ poetry install
 # Activate the virtual environment
 poetry shell
 ```
-
-## Adapting from AI Agents
-
-This project adapts core functionality from the AI Agents framework:
-
-1. **Agent Architecture**:
-   - Reuses the OpenAI integration pattern
-   - Replaces Telegram interface with GitHub API
-   - Adapts tools for GitHub-specific functionality
-
-2. **Conversation Model**:
-   - Maintains the conversation flow with history
-   - Customizes system prompts for GitHub contexts
-   - PR reviews, issues, and code scans become conversation contexts
-
-3. **Tool System**:
-   - Adapts Tool class pattern for GitHub operations
-   - Creates GitHub-specific tools for repository interaction
-   - Implements file analysis tools for code review
-
-4. **GitHub Integration**:
-   - Uses GitHub API through PyGithub
-   - Handles GitHub Actions event context
-   - Posts comments back to PRs and issues
-
-## Required Modifications to AI Agents
-
-To better support this use case, the following modifications to the AI Agents project would be beneficial:
-
-1. More modular agent interface that can be swapped (Telegram, GitHub, CLI)
-2. Separate core AI functionality from the delivery mechanism
-3. Extended tool registration system for different contexts
-4. Common utilities for parsing and handling code files
-5. Context-specific prompt libraries
 
 ## Contributing
 
