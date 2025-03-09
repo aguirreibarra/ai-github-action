@@ -61,7 +61,7 @@ class GitHubAgent:
 
     def _register_tools(self) -> List[ChatCompletionToolParam]:
         """Register available tools for the agent."""
-        tools = [
+        self._tool_implementations = [
             GetPullRequestTool(self.github),
             GetPullRequestFilesTool(self.github),
             GetPullRequestDiffTool(self.github),
@@ -74,18 +74,21 @@ class GitHubAgent:
             GetRepositoryFileContentTool(self.github),
             GetRepositoryStatsTool(self.github),
         ]
-        
+
         # Only register the approval tool if auto_approve is enabled
         auto_approve = os.environ.get("AUTO_APPROVE", "false").lower() == "true"
         if auto_approve:
-            tools.append(ApprovePullRequestTool(self.github))
+            self._tool_implementations.append(ApprovePullRequestTool(self.github))
             logger.info("PR approval tool is registered and available for use")
         else:
-            logger.info("PR approval tool is NOT registered (AUTO_APPROVE is not enabled)")
+            logger.info(
+                "PR approval tool is NOT registered (AUTO_APPROVE is not enabled)"
+            )
 
         # Format tools for OpenAI API and cast to the correct type
         return cast(
-            List[ChatCompletionToolParam], [tool.to_openai_tool() for tool in tools]
+            List[ChatCompletionToolParam],
+            [tool.to_openai_tool() for tool in self._tool_implementations],
         )
 
     def _get_system_prompt(self, context: Optional[str] = None) -> str:
@@ -109,43 +112,17 @@ class GitHubAgent:
     def execute_tool(self, tool_name: str, parameters: Dict[str, Any]) -> Any:
         """Execute a tool by name with the given parameters."""
         # Create a list of available tool implementations
-        tool_implementations = [
-            GetPullRequestTool(self.github),
-            GetPullRequestFilesTool(self.github),
-            GetPullRequestDiffTool(self.github),
-            AddPullRequestCommentTool(self.github),
-            ListPullRequestCommentsTool(self.github),
-            UpdateOrCreatePullRequestCommentTool(self.github),
-            GetRepositoryTool(self.github),
-            GetIssueTool(self.github),
-            AddIssueCommentTool(self.github),
-            GetRepositoryFileContentTool(self.github),
-            GetRepositoryStatsTool(self.github),
-        ]
-        
-        # Only include the approval tool if it's enabled
-        auto_approve = os.environ.get("AUTO_APPROVE", "false").lower() == "true"
-        if auto_approve:
-            tool_implementations.append(ApprovePullRequestTool(self.github))
-        
+
         # First check if this tool exists in our registered tools
         for tool in self.tools:
             if tool["function"]["name"] == tool_name:
                 # Find the matching implementation
-                for original_tool in tool_implementations:
+                for original_tool in self._tool_implementations:
                     if original_tool.name == tool_name:
                         return original_tool.execute(parameters)
 
         # If we get here, the tool wasn't found in our registered tools
         logger.warning(f"Tool {tool_name} was called but not found in registered tools")
-        
-        # Special case for approve_pull_request - give helpful message if it's disabled
-        if tool_name == "approve_pull_request" and not auto_approve:
-            logger.warning("approve_pull_request was called but AUTO_APPROVE is not enabled")
-            return {
-                "error": "Auto-approval is not enabled. Set AUTO_APPROVE=true to enable this feature."
-            }
-            
         raise ValueError(f"Tool {tool_name} not found")
 
     def process_message(
@@ -189,7 +166,7 @@ class GitHubAgent:
                     return {
                         "content": "I've reached the maximum number of operations. Please break down your request into smaller steps.",
                         "conversation_history": messages,
-                        "tool_calls": []  # Empty tool_calls for consistency
+                        "tool_calls": [],  # Empty tool_calls for consistency
                     }
 
                 iteration_count += 1
@@ -253,7 +230,7 @@ class GitHubAgent:
                     "content": assistant_message.content,
                     "conversation_history": messages,
                 }
-                
+
                 # Include tool calls in the response if they exist
                 if assistant_message.tool_calls:
                     response_data["tool_calls"] = [
@@ -261,11 +238,11 @@ class GitHubAgent:
                             "id": tc.id,
                             "type": tc.type,
                             "name": tc.function.name,
-                            "arguments": json.loads(tc.function.arguments)
+                            "arguments": json.loads(tc.function.arguments),
                         }
                         for tc in assistant_message.tool_calls
                     ]
-                
+
                 return response_data
 
             except Exception as e:
@@ -273,5 +250,5 @@ class GitHubAgent:
                 return {
                     "content": f"Error: {str(e)}",
                     "conversation_history": messages,
-                    "tool_calls": []  # Empty tool_calls for consistency
+                    "tool_calls": [],  # Empty tool_calls for consistency
                 }
