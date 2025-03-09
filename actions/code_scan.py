@@ -1,7 +1,7 @@
 import fnmatch
 import os
 import logging
-from typing import Any, List
+from typing import Any
 
 from github_agent import GitHubAgent
 
@@ -28,13 +28,13 @@ class CodeScanAction:
         )
         self.max_files = int(os.environ.get("MAX_FILES", 10))
 
-    def _parse_patterns(self, patterns_str: str) -> List[str]:
+    def _parse_patterns(self, patterns_str: str) -> list[str]:
         """Parse comma-separated glob patterns."""
         if not patterns_str:
             return []
         return [p.strip() for p in patterns_str.split(",")]
 
-    def _get_files_to_scan(self, repo_name: str) -> List[str]:
+    def _get_files_to_scan(self, repo_name: str) -> list[str]:
         """Get files to scan based on patterns."""
         # Get repository structure
         repo_info = self.agent.execute_tool("get_repository", {"repo": repo_name})
