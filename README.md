@@ -28,24 +28,43 @@ name: AI PR Review
 on:
   pull_request:
     types: [opened, synchronize]
+    paths-ignore:
+      - '**.md'
+      - 'docs/**'
+      - '.github/**'
 
 jobs:
   review:
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v3
+      - uses: actions/checkout@v4
         with:
           fetch-depth: 0
           
       - name: AI PR Review
         uses: aguirreibarra/ai-github-action@main
         with:
+          # Core configuration
           action-type: pr-review
           openai-api-key: ${{ secrets.OPENAI_API_KEY }}
           github-token: ${{ secrets.GITHUB_TOKEN }}
+          
+          # Optional configuration
+          model: "gpt-4o"
+          max-files: 15
+          include-patterns: "*.py,*.js,*.ts,*.jsx,*.tsx,*.java"
+          exclude-patterns: "**/__tests__/**,**/test/**,**/dist/**"
+          auto-approve: "false"
 ```
 
 The PR Review Action will analyze pull requests and post feedback as a comment. When triggered multiple times on the same PR (e.g., after new commits), it will update its existing comment instead of creating a new one, keeping the PR timeline clean.
+
+#### Advanced PR Review Features
+
+- **Smart File Prioritization**: When a PR contains more files than the `max-files` limit, the action automatically prioritizes files with the most changes
+- **Error Handling**: Fails gracefully if specific files can't be retrieved or processed
+- **Customizable System Prompt**: Guide the AI's focus towards specific aspects like security, performance, or code style
+- **Automatic Approval**: Optionally approve PRs automatically when the AI review is favorable
 
 ### Issue Analyzer Action
 
@@ -109,7 +128,7 @@ jobs:
 
 ## Automatic PR Approval
 
-When the `auto-approve` parameter is set to `true`, the action will automatically approve pull requests where the AI review is favorable. This is determined by analyzing the review content for approval language.
+When the `auto-approve` parameter is set to `true`, the action will allow the AI to directly approve pull requests that it determines meet quality standards. Rather than relying on simplistic text pattern matching, the AI will explicitly call the approval tool when it deems a PR ready to merge.
 
 ```yaml
 name: AI PR Review with Auto-Approval

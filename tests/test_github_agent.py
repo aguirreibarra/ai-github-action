@@ -29,6 +29,9 @@ class TestGitHubAgent(unittest.TestCase):
             custom_prompt=None,
         )
 
+        # Ensure the agent has tool implementations initialized
+        self.agent._register_tools()
+
         # Assign the client directly to ensure it's accessible in tests
         self.agent.client = self.openai_client_mock
 
@@ -82,6 +85,12 @@ class TestGitHubAgent(unittest.TestCase):
         mock_tool.name = "get_pull_request"
         mock_tool.execute.return_value = {"title": "Test PR"}
         mock_tool_class.return_value = mock_tool
+
+        # Create a new tools list with only our mock tool
+        self.agent._tool_implementations = [mock_tool]
+        self.agent.tools = [
+            {"type": "function", "function": {"name": "get_pull_request"}}
+        ]
 
         # Test tool execution
         result = self.agent.execute_tool(
@@ -183,10 +192,8 @@ class TestGitHubAgent(unittest.TestCase):
             "Test message with tool call", max_iterations=3
         )
 
-        # Verify API was called
-        self.assertGreaterEqual(
-            len(self.openai_client_mock.chat.completions.create.call_args_list), 1
-        )
+        # Verify API was called twice (once for tool call, once for final response)
+        self.assertEqual(self.openai_client_mock.chat.completions.create.call_count, 2)
 
         # Verify we got the expected result
         self.assertEqual(result["content"], "Final response")
@@ -217,17 +224,20 @@ class TestGitHubAgent(unittest.TestCase):
         self.openai_client_mock.chat.completions.create.reset_mock()
         self.openai_client_mock.chat.completions.create.return_value = mock_response
 
-        # Mock the execute_tool method
+        # Mock the execute_tool method to return a valid result
         self.agent.execute_tool = MagicMock(return_value={"title": "Test PR"})
 
         # Test with max_iterations=2
         result = self.agent.process_message("Test message", max_iterations=2)
 
-        # Check that API was called the correct number of times
+        # Check that API was called exactly max_iterations times
         self.assertEqual(self.openai_client_mock.chat.completions.create.call_count, 2)
 
         # Should include a message about reaching max iterations
         self.assertIn("maximum number of operations", result["content"])
+
+        # Verify we got a proper result structure
+        self.assertIn("conversation_history", result)
 
 
 if __name__ == "__main__":

@@ -64,6 +64,7 @@ jobs:
         github-token: ${{ secrets.GITHUB_TOKEN }}
         max-files: 15
         auto-approve: true
+        model: o3-mini
 
   # This job builds and tests the Docker image
   docker:

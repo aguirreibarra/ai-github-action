@@ -1,4 +1,4 @@
-# Example workflow for AI PR review
+# Example workflow for AI PR review with enhanced options
 
 name: AI PR Review
 
@@ -21,9 +21,29 @@ jobs:
       - name: AI PR Review
         uses: aguirreibarra/ai-github-action@main
         with:
+          # Core configuration
           action-type: pr-review
           openai-api-key: ${{ secrets.OPENAI_API_KEY }}
           github-token: ${{ secrets.GITHUB_TOKEN }}
+          
+          # Model selection (optional, defaults to gpt-4o-mini)
+          model: "gpt-4o"
+          
+          # File filtering options
           max-files: 15
-          include-patterns: "*.py,*.js,*.ts,*.jsx,*.tsx,*.java"
-          exclude-patterns: "**/__tests__/**,**/test/**,**/dist/**"
+          include-patterns: "*.py,*.js,*.ts,*.jsx,*.tsx,*.java,*.html,*.css,*.scss"
+          exclude-patterns: "**/__tests__/**,**/test/**,**/dist/**,**/node_modules/**,**/vendor/**"
+          
+          # Optional: Enables automatic PR approval if AI review is favorable
+          auto-approve: "false"
+          
+          # Optional: Custom system prompt to guide the AI review
+          custom-prompt: >
+            You are an expert code reviewer focused on security, performance, and best practices.
+            When reviewing pull requests:
+            1. Highlight potential security issues as your top priority
+            2. Point out performance concerns and suggest optimizations
+            3. Flag any code that doesn't follow project conventions
+            4. Suggest tests that could be added to improve coverage
+            5. Be constructive and educational in your feedback
+            6. Be concise and organize your review by files/components
