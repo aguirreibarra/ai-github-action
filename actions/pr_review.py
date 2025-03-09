@@ -1,7 +1,7 @@
 import fnmatch
 import os
 import logging
-from typing import Dict, Any, List, Optional
+from typing import Any
 
 logger = logging.getLogger("pr-review-action")
 
@@ -26,13 +26,13 @@ class PRReviewAction:
             os.environ.get("EXCLUDE_PATTERNS", "")
         )
 
-    def _parse_patterns(self, patterns_str: str) -> List[str]:
+    def _parse_patterns(self, patterns_str: str) -> list[str]:
         """Parse comma-separated glob patterns."""
         if not patterns_str:
             return []
         return [p.strip() for p in patterns_str.split(",")]
 
-    def _match_files(self, files: List[Dict[str, Any]]) -> List[Dict[str, Any]]:
+    def _match_files(self, files: list[dict[str, Any]]) -> list[dict[str, Any]]:
         """Filter files based on include/exclude patterns."""
         if not self.include_patterns and not self.exclude_patterns:
             return files[: self.max_files]
@@ -57,14 +57,14 @@ class PRReviewAction:
         # Always sort files by number of changes (more changes = higher priority)
         # This ensures consistent ordering for testing and user experience
         matched_files.sort(key=lambda f: f.get("changes", 0), reverse=True)
-        
+
         # Then limit to max_files if needed
         if len(matched_files) > self.max_files:
-            matched_files = matched_files[:self.max_files]
+            matched_files = matched_files[: self.max_files]
 
         return matched_files
 
-    def run(self) -> Dict[str, Any]:
+    def run(self) -> dict[str, Any]:
         """Run the PR review action."""
         try:
             # Extract PR information from event
@@ -94,11 +94,13 @@ class PRReviewAction:
 
             # Get PR diff for filtered files using a more efficient approach
             pr_diff = ""
-            
+
             # First, get all the filenames
             filenames = [file["filename"] for file in filtered_files]
-            logger.info(f"Getting diffs for {len(filenames)} files: {', '.join(filenames[:3])}{'...' if len(filenames) > 3 else ''}")
-            
+            logger.info(
+                f"Getting diffs for {len(filenames)} files: {', '.join(filenames[:3])}{'...' if len(filenames) > 3 else ''}"
+            )
+
             # Process files one by one but could be parallelized in the future
             for file in filtered_files:
                 try:
@@ -115,8 +117,12 @@ class PRReviewAction:
                     deletions = file.get("deletions", 0)
                     pr_diff += f"File: {file['filename']} ({file_status}, +{additions}/-{deletions})\n{file_diff}\n\n"
                 except Exception as e:
-                    logger.error(f"Error getting diff for file {file['filename']}: {str(e)}")
-                    pr_diff += f"File: {file['filename']} (Error: Could not retrieve diff)\n\n"
+                    logger.error(
+                        f"Error getting diff for file {file['filename']}: {str(e)}"
+                    )
+                    pr_diff += (
+                        f"File: {file['filename']} (Error: Could not retrieve diff)\n\n"
+                    )
 
             # Construct message for the agent
             message = (
@@ -155,53 +161,74 @@ class PRReviewAction:
 
             # Extract structured data from the response using a more robust approach
             lines = response["content"].split("\n")
-            sections = {
+            sections: dict[str, list[str]] = {
                 "summary": [],
                 "details": [],
                 "suggestions": [],
-                "assessment": []
+                "assessment": [],
             }
-            
+
             # Define section markers with variations
             section_markers = {
                 "summary": ["summary", "changes", "overview", "what changed"],
-                "details": ["issue", "bug", "problem", "concern", "potential issues", "code quality"],
-                "suggestions": ["suggest", "improvement", "recommend", "enhancement", "optimization"],
-                "assessment": ["overall", "assessment", "conclusion", "verdict", "approve"]
+                "details": [
+                    "issue",
+                    "bug",
+                    "problem",
+                    "concern",
+                    "potential issues",
+                    "code quality",
+                ],
+                "suggestions": [
+                    "suggest",
+                    "improvement",
+                    "recommend",
+                    "enhancement",
+                    "optimization",
+                ],
+                "assessment": [
+                    "overall",
+                    "assessment",
+                    "conclusion",
+                    "verdict",
+                    "approve",
+                ],
             }
-            
+
             # First pass: identify section headers and their line numbers
             section_boundaries = []
             for i, line in enumerate(lines):
                 line_lower = line.lower()
-                
+
                 # Check if line contains any section marker
                 for section, markers in section_markers.items():
                     if any(marker in line_lower for marker in markers):
                         # Check if it's a header (often has special chars like #, *, etc.)
-                        if (line_lower.startswith('#') or 
-                            line_lower.startswith('*') or 
-                            line_lower.startswith('-') or
-                            any(f"{num}." in line_lower[:4] for num in range(1, 6))):
+                        if (
+                            line_lower.startswith("#")
+                            or line_lower.startswith("*")
+                            or line_lower.startswith("-")
+                            or any(f"{num}." in line_lower[:4] for num in range(1, 6))
+                        ):
                             section_boundaries.append((i, section))
                             break
-            
+
             # Sort by line number
             section_boundaries.sort()
-            
+
             # Second pass: extract content between section boundaries
             for i, (line_num, section) in enumerate(section_boundaries):
                 start = line_num + 1  # Skip the header line
-                
+
                 # If there's a next section, end at that section
                 if i < len(section_boundaries) - 1:
-                    end = section_boundaries[i+1][0]
+                    end = section_boundaries[i + 1][0]
                 else:
                     end = len(lines)
-                
+
                 # Add lines to the appropriate section
                 sections[section].extend(lines[start:end])
-            
+
             # If no sections were found, try to intelligently assign content
             if all(len(content) == 0 for content in sections.values()):
                 for line in lines:
@@ -211,7 +238,7 @@ class PRReviewAction:
                         if any(marker in line_lower for marker in markers):
                             sections[section].append(line)
                             break
-            
+
             # Join the lines for each section
             summary = "\n".join(sections["summary"])
             details = "\n".join(sections["details"])
