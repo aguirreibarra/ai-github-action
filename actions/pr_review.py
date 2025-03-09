@@ -130,8 +130,10 @@ class PRReviewAction:
             
             if auto_approve:
                 approval_instruction = (
-                    f"\n\n6. If you believe the PR should be approved, explicitly call the approve_pull_request tool with: "
-                    f"repo=\"{repo_name}\", pr_number={pr_number}, and an appropriate approval message. "
+                    f"\n\n6. IMPORTANT: First provide a complete review with all the sections above. "
+                    f"Then, as a SEPARATE STEP AFTER your complete review, if you believe the PR should be approved, "
+                    f"explicitly call the approve_pull_request tool with: "
+                    f"repo=\"{repo_name}\", pr_number={pr_number}, and a SHORT approval message. "
                     f"Only call this tool if you're confident the PR meets quality standards and is ready to merge."
                 )
 

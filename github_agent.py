@@ -1,5 +1,6 @@
 import json
 import logging
+import os
 from typing import Dict, List, Optional, Any, cast, Iterable
 import openai
 from openai.types.chat import ChatCompletion
@@ -72,8 +73,15 @@ class GitHubAgent:
             AddIssueCommentTool(self.github),
             GetRepositoryFileContentTool(self.github),
             GetRepositoryStatsTool(self.github),
-            ApprovePullRequestTool(self.github),
         ]
+        
+        # Only register the approval tool if auto_approve is enabled
+        auto_approve = os.environ.get("AUTO_APPROVE", "false").lower() == "true"
+        if auto_approve:
+            tools.append(ApprovePullRequestTool(self.github))
+            logger.info("PR approval tool is registered and available for use")
+        else:
+            logger.info("PR approval tool is NOT registered (AUTO_APPROVE is not enabled)")
 
         # Format tools for OpenAI API and cast to the correct type
         return cast(
@@ -100,25 +108,44 @@ class GitHubAgent:
 
     def execute_tool(self, tool_name: str, parameters: Dict[str, Any]) -> Any:
         """Execute a tool by name with the given parameters."""
+        # Create a list of available tool implementations
+        tool_implementations = [
+            GetPullRequestTool(self.github),
+            GetPullRequestFilesTool(self.github),
+            GetPullRequestDiffTool(self.github),
+            AddPullRequestCommentTool(self.github),
+            ListPullRequestCommentsTool(self.github),
+            UpdateOrCreatePullRequestCommentTool(self.github),
+            GetRepositoryTool(self.github),
+            GetIssueTool(self.github),
+            AddIssueCommentTool(self.github),
+            GetRepositoryFileContentTool(self.github),
+            GetRepositoryStatsTool(self.github),
+        ]
+        
+        # Only include the approval tool if it's enabled
+        auto_approve = os.environ.get("AUTO_APPROVE", "false").lower() == "true"
+        if auto_approve:
+            tool_implementations.append(ApprovePullRequestTool(self.github))
+        
+        # First check if this tool exists in our registered tools
         for tool in self.tools:
             if tool["function"]["name"] == tool_name:
-                for original_tool in [
-                    GetPullRequestTool(self.github),
-                    GetPullRequestFilesTool(self.github),
-                    GetPullRequestDiffTool(self.github),
-                    AddPullRequestCommentTool(self.github),
-                    ListPullRequestCommentsTool(self.github),
-                    UpdateOrCreatePullRequestCommentTool(self.github),
-                    GetRepositoryTool(self.github),
-                    GetIssueTool(self.github),
-                    AddIssueCommentTool(self.github),
-                    GetRepositoryFileContentTool(self.github),
-                    GetRepositoryStatsTool(self.github),
-                    ApprovePullRequestTool(self.github),
-                ]:
+                # Find the matching implementation
+                for original_tool in tool_implementations:
                     if original_tool.name == tool_name:
                         return original_tool.execute(parameters)
 
+        # If we get here, the tool wasn't found in our registered tools
+        logger.warning(f"Tool {tool_name} was called but not found in registered tools")
+        
+        # Special case for approve_pull_request - give helpful message if it's disabled
+        if tool_name == "approve_pull_request" and not auto_approve:
+            logger.warning("approve_pull_request was called but AUTO_APPROVE is not enabled")
+            return {
+                "error": "Auto-approval is not enabled. Set AUTO_APPROVE=true to enable this feature."
+            }
+            
         raise ValueError(f"Tool {tool_name} not found")
 
     def process_message(
