@@ -116,7 +116,7 @@ class PRReviewAction:
 
             logger.info(f"Will review {len(matched_files)} files")
 
-            # Get PR diff for filtered files using a more efficient approach
+            # Get PR diff for filtered files
             pr_diff = ""
 
             # First, get all the filenames
@@ -195,27 +195,6 @@ class PRReviewAction:
             )
 
             logger.info(f"PR comment {result['action']} with ID {result['id']}")
-
-            # Check if the AI decided to approve the PR by explicitly calling the approve tool
-            should_approve = False
-            auto_approve = os.environ.get("AUTO_APPROVE", "false").lower() == "true"
-            logger.info(f"Auto approve setting: {auto_approve}")
-
-            # Check response for any tool calls made by the AI
-            tool_calls = response.get("tool_calls", [])
-            logger.debug(f"Found {len(tool_calls)} tool calls in AI response")
-
-            for tool_call in tool_calls:
-                logger.debug(f"Processing tool call: {tool_call.get('name')}")
-                if tool_call.get("name") == "approve_pull_request":
-                    # The AI decided to approve by explicitly calling the tool
-                    should_approve = True
-                    logger.info(
-                        "AI explicitly called the approve tool - PR was approved"
-                    )
-
-            # Return results with full conversation data instead of parsed sections
-            logger.info(f"Completed PR review. Approved: {should_approve}")
 
         except Exception as e:
             logger.critical(

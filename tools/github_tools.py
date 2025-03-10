@@ -1,4 +1,4 @@
-from typing import Dict, Any, List
+from typing import Any
 from abc import ABC, abstractmethod
 from github import Github
 
@@ -28,16 +28,16 @@ class GitHubTool(ABC):
 
     @property
     @abstractmethod
-    def parameters(self) -> Dict[str, Any]:
+    def parameters(self) -> dict[str, Any]:
         """Tool parameters."""
         pass
 
     @abstractmethod
-    def execute(self, parameters: Dict[str, Any]) -> Any:
+    def execute(self, parameters: dict[str, Any]) -> Any:
         """Execute the tool."""
         pass
 
-    def to_openai_tool(self) -> Dict[str, Any]:
+    def to_openai_tool(self) -> dict[str, Any]:
         """Convert the tool to OpenAI tool format."""
         # Extract required parameters
         required_params = [
@@ -84,7 +84,7 @@ class GetPullRequestTool(GitHubTool):
         return "Get information about a pull request"
 
     @property
-    def parameters(self) -> Dict[str, Any]:
+    def parameters(self) -> dict[str, Any]:
         return {
             "repo": {
                 "type": "string",
@@ -98,7 +98,7 @@ class GetPullRequestTool(GitHubTool):
             },
         }
 
-    def execute(self, parameters: Dict[str, Any]) -> Dict[str, Any]:
+    def execute(self, parameters: dict[str, Any]) -> dict[str, Any]:
         repo = self.github.get_repo(parameters["repo"])
         pr = repo.get_pull(parameters["pr_number"])
 
@@ -132,7 +132,7 @@ class GetPullRequestFilesTool(GitHubTool):
         return "Get the list of files changed in a pull request"
 
     @property
-    def parameters(self) -> Dict[str, Any]:
+    def parameters(self) -> dict[str, Any]:
         return {
             "repo": {
                 "type": "string",
@@ -146,7 +146,7 @@ class GetPullRequestFilesTool(GitHubTool):
             },
         }
 
-    def execute(self, parameters: Dict[str, Any]) -> List[Dict[str, Any]]:
+    def execute(self, parameters: dict[str, Any]) -> list[dict[str, Any]]:
         repo = self.github.get_repo(parameters["repo"])
         pr = repo.get_pull(parameters["pr_number"])
 
@@ -180,7 +180,7 @@ class GetPullRequestDiffTool(GitHubTool):
         return "Get the diff of a specific file in a pull request"
 
     @property
-    def parameters(self) -> Dict[str, Any]:
+    def parameters(self) -> dict[str, Any]:
         return {
             "repo": {
                 "type": "string",
@@ -199,7 +199,7 @@ class GetPullRequestDiffTool(GitHubTool):
             },
         }
 
-    def execute(self, parameters: Dict[str, Any]) -> str:
+    def execute(self, parameters: dict[str, Any]) -> str:
         repo = self.github.get_repo(parameters["repo"])
         pr = repo.get_pull(parameters["pr_number"])
         filename = parameters["filename"]
@@ -226,7 +226,7 @@ class AddPullRequestCommentTool(GitHubTool):
         return "Add a comment to a pull request"
 
     @property
-    def parameters(self) -> Dict[str, Any]:
+    def parameters(self) -> dict[str, Any]:
         return {
             "repo": {
                 "type": "string",
@@ -245,7 +245,7 @@ class AddPullRequestCommentTool(GitHubTool):
             },
         }
 
-    def execute(self, parameters: Dict[str, Any]) -> Dict[str, Any]:
+    def execute(self, parameters: dict[str, Any]) -> dict[str, Any]:
         repo = self.github.get_repo(parameters["repo"])
         pr = repo.get_pull(parameters["pr_number"])
         comment = pr.create_issue_comment(parameters["body"])
@@ -268,7 +268,7 @@ class ListPullRequestCommentsTool(GitHubTool):
         return "List comments on a pull request"
 
     @property
-    def parameters(self) -> Dict[str, Any]:
+    def parameters(self) -> dict[str, Any]:
         return {
             "repo": {
                 "type": "string",
@@ -282,7 +282,7 @@ class ListPullRequestCommentsTool(GitHubTool):
             },
         }
 
-    def execute(self, parameters: Dict[str, Any]) -> List[Dict[str, Any]]:
+    def execute(self, parameters: dict[str, Any]) -> list[dict[str, Any]]:
         repo = self.github.get_repo(parameters["repo"])
         pr = repo.get_pull(parameters["pr_number"])
         comments = list(pr.get_issue_comments())
@@ -314,7 +314,7 @@ class UpdateOrCreatePullRequestCommentTool(GitHubTool):
         return "Update an existing AI review comment or create a new one"
 
     @property
-    def parameters(self) -> Dict[str, Any]:
+    def parameters(self) -> dict[str, Any]:
         return {
             "repo": {
                 "type": "string",
@@ -338,7 +338,7 @@ class UpdateOrCreatePullRequestCommentTool(GitHubTool):
             },
         }
 
-    def execute(self, parameters: Dict[str, Any]) -> Dict[str, Any]:
+    def execute(self, parameters: dict[str, Any]) -> dict[str, Any]:
         repo = self.github.get_repo(parameters["repo"])
         pr = repo.get_pull(parameters["pr_number"])
         comments = list(pr.get_issue_comments())
@@ -381,7 +381,7 @@ class GetRepositoryTool(GitHubTool):
         return "Get information about a repository"
 
     @property
-    def parameters(self) -> Dict[str, Any]:
+    def parameters(self) -> dict[str, Any]:
         return {
             "repo": {
                 "type": "string",
@@ -390,7 +390,7 @@ class GetRepositoryTool(GitHubTool):
             },
         }
 
-    def execute(self, parameters: Dict[str, Any]) -> Dict[str, Any]:
+    def execute(self, parameters: dict[str, Any]) -> dict[str, Any]:
         repo = self.github.get_repo(parameters["repo"])
 
         return {
@@ -421,7 +421,7 @@ class GetIssueTool(GitHubTool):
         return "Get information about an issue"
 
     @property
-    def parameters(self) -> Dict[str, Any]:
+    def parameters(self) -> dict[str, Any]:
         return {
             "repo": {
                 "type": "string",
@@ -435,7 +435,7 @@ class GetIssueTool(GitHubTool):
             },
         }
 
-    def execute(self, parameters: Dict[str, Any]) -> Dict[str, Any]:
+    def execute(self, parameters: dict[str, Any]) -> dict[str, Any]:
         repo = self.github.get_repo(parameters["repo"])
         issue = repo.get_issue(parameters["issue_number"])
 
@@ -467,7 +467,7 @@ class AddIssueCommentTool(GitHubTool):
         return "Add a comment to an issue"
 
     @property
-    def parameters(self) -> Dict[str, Any]:
+    def parameters(self) -> dict[str, Any]:
         return {
             "repo": {
                 "type": "string",
@@ -486,7 +486,7 @@ class AddIssueCommentTool(GitHubTool):
             },
         }
 
-    def execute(self, parameters: Dict[str, Any]) -> Dict[str, Any]:
+    def execute(self, parameters: dict[str, Any]) -> dict[str, Any]:
         repo = self.github.get_repo(parameters["repo"])
         issue = repo.get_issue(parameters["issue_number"])
         comment = issue.create_comment(parameters["body"])
@@ -509,7 +509,7 @@ class GetRepositoryFileContentTool(GitHubTool):
         return "Get the content of a file in a repository"
 
     @property
-    def parameters(self) -> Dict[str, Any]:
+    def parameters(self) -> dict[str, Any]:
         return {
             "repo": {
                 "type": "string",
@@ -528,7 +528,7 @@ class GetRepositoryFileContentTool(GitHubTool):
             },
         }
 
-    def execute(self, parameters: Dict[str, Any]) -> str:
+    def execute(self, parameters: dict[str, Any]) -> str:
         repo = self.github.get_repo(parameters["repo"])
         path = parameters["path"]
         ref = parameters.get("ref", None)
@@ -554,7 +554,7 @@ class GetRepositoryStatsTool(GitHubTool):
         return "Get statistics about a repository"
 
     @property
-    def parameters(self) -> Dict[str, Any]:
+    def parameters(self) -> dict[str, Any]:
         return {
             "repo": {
                 "type": "string",
@@ -563,7 +563,7 @@ class GetRepositoryStatsTool(GitHubTool):
             },
         }
 
-    def execute(self, parameters: Dict[str, Any]) -> Dict[str, Any]:
+    def execute(self, parameters: dict[str, Any]) -> dict[str, Any]:
         repo = self.github.get_repo(parameters["repo"])
 
         stats = {
@@ -621,7 +621,7 @@ class ApprovePullRequestTool(GitHubTool):
         return "Approve a pull request if the review is favorable"
 
     @property
-    def parameters(self) -> Dict[str, Any]:
+    def parameters(self) -> dict[str, Any]:
         return {
             "repo": {
                 "type": "string",
@@ -640,7 +640,7 @@ class ApprovePullRequestTool(GitHubTool):
             },
         }
 
-    def execute(self, parameters: Dict[str, Any]) -> Dict[str, Any]:
+    def execute(self, parameters: dict[str, Any]) -> dict[str, Any]:
         repo = self.github.get_repo(parameters["repo"])
         pr = repo.get_pull(parameters["pr_number"])
 
