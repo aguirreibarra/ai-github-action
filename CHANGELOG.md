@@ -4,6 +4,12 @@ All notable changes to this project will be documented in this file.
 
 ## [Unreleased]
 
+### Added
+- Agent tool to create or update issue comment
+
+### Changed
+- Agent will now edit existing comment on subsequent issue analysis
+
 ## [1.1.0] - 2025-03-09
 
 ### Added
