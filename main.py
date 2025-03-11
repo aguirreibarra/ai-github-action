@@ -65,6 +65,7 @@ def main():
         openai_api_key=openai_api_key,
         model=os.environ.get("MODEL", "gpt-4o-mini"),
         custom_prompt=os.environ.get("CUSTOM_PROMPT"),
+        action_type=action_type,
     )
 
     # Run appropriate action based on action_type
