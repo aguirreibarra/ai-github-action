@@ -217,7 +217,9 @@ class GitHubAgent:
                         tool_name = tool_call.function.name
                         tool_params = json.loads(tool_call.function.arguments)
 
-                        logger.info(f"Executing tool: {tool_name}")
+                        logger.info(
+                            f"Executing tool: {tool_name} with params: {tool_params}"
+                        )
                         tool_result = self.execute_tool(tool_name, tool_params)
 
                         # Add tool result to messages
