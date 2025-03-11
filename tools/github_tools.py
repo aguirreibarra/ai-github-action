@@ -497,6 +497,72 @@ class AddIssueCommentTool(GitHubTool):
         }
 
 
+class UpdateOrCreateIssueCommentTool(GitHubTool):
+    """Tool for updating an existing AI comment on an issue or creating a new one."""
+
+    @property
+    def name(self) -> str:
+        return "update_or_create_issue_comment"
+
+    @property
+    def description(self) -> str:
+        return "Update an existing AI comment on an issue or create a new one"
+
+    @property
+    def parameters(self) -> dict[str, Any]:
+        return {
+            "repo": {
+                "type": "string",
+                "description": "Repository name with owner (e.g., 'owner/repo')",
+                "required": True,
+            },
+            "issue_number": {
+                "type": "integer",
+                "description": "Issue number",
+                "required": True,
+            },
+            "body": {
+                "type": "string",
+                "description": "Comment content, supports Markdown",
+                "required": True,
+            },
+            "header_marker": {
+                "type": "string",
+                "description": "Unique identifier at the beginning of comments made by this bot",
+                "required": True,
+            },
+        }
+
+    def execute(self, parameters: dict[str, Any]) -> dict[str, Any]:
+        repo = self.github.get_repo(parameters["repo"])
+        issue = repo.get_issue(parameters["issue_number"])
+        comments = list(issue.get_comments())
+        header_marker = parameters["header_marker"]
+
+        existing_comment = None
+        for comment in comments:
+            if comment.body.startswith(header_marker):
+                existing_comment = comment
+                break
+
+        # Update existing comment or create new one
+        if existing_comment:
+            existing_comment.edit(parameters["body"])
+            return {
+                "id": existing_comment.id,
+                "url": existing_comment.html_url,
+                "action": "updated",
+            }
+        else:
+            # No existing comment found, create a new one
+            new_comment = issue.create_comment(parameters["body"])
+            return {
+                "id": new_comment.id,
+                "url": new_comment.html_url,
+                "action": "created",
+            }
+
+
 class GetRepositoryFileContentTool(GitHubTool):
     """Tool for getting the content of a file in a repository."""
 
