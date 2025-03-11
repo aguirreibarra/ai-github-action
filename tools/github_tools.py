@@ -481,9 +481,9 @@ class CreatePullRequestReviewCommentTool(GitHubTool):
         }
 
     def execute(self, parameters: dict[str, Any]) -> dict[str, Any]:
-        repo = self.github.get_repo(parameters["repo"])
-        pr = repo.get_pull(parameters["pr_number"])
-        commit = repo.get_commit(parameters["commit_id"])
+        repo = self.github.get_repo(parameters.pop("repo"))
+        pr = repo.get_pull(parameters.pop("pr_number"))
+        commit = repo.get_commit(parameters.pop("commit_id"))
 
         comment = pr.create_review_comment(
             body=parameters.pop("body"),
