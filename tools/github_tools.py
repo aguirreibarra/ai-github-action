@@ -483,12 +483,35 @@ class CreatePullRequestReviewCommentTool(GitHubTool):
     def execute(self, parameters: dict[str, Any]) -> dict[str, Any]:
         repo = self.github.get_repo(parameters.pop("repo"))
         pr = repo.get_pull(parameters.pop("pr_number"))
-        commit = repo.get_commit(parameters.pop("commit_id"))
+        commit_id = parameters.pop("commit_id")
+        commit = repo.get_commit(commit_id)
 
+        # We need to validate "path" is a valid file in the PR
+        path = parameters.pop("path")
+        body = parameters.pop("body")
+
+        # Get the file from the PR to get position info
+        found_file = None
+        for file in pr.get_files():
+            if file.filename == path:
+                found_file = file
+                break
+
+        if not found_file:
+            raise ValueError(f"Path '{path}' not found in the pull request files")
+
+        # Position is required but we might need to calculate it
+        # If line is provided but position isn't, we need to determine the position
+        if "position" not in parameters and "line" in parameters:
+            # We use the position value from file data when possible
+            position = parameters.pop("line")
+            parameters["position"] = position
+
+        # Create the review comment
         comment = pr.create_review_comment(
-            body=parameters.pop("body"),
+            body=body,
             commit=commit,
-            path=parameters.pop("path"),
+            path=path,
             **{k: v for k, v in parameters.items() if v is not None},
         )
 
