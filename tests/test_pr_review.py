@@ -18,7 +18,6 @@ class TestPRReviewAction(unittest.TestCase):
         os.environ["MAX_FILES"] = "5"
         os.environ["INCLUDE_PATTERNS"] = "*.py,*.js"
         os.environ["EXCLUDE_PATTERNS"] = "*.md,test_*"
-        os.environ["AUTO_APPROVE"] = "false"
 
     def test_init(self):
         """Test initialization of the PR review action."""

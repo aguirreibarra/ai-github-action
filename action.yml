@@ -49,4 +49,3 @@ runs:
     MAX_FILES: ${{ inputs.max-files }}
     INCLUDE_PATTERNS: ${{ inputs.include-patterns }}
     EXCLUDE_PATTERNS: ${{ inputs.exclude-patterns }}
-    AUTO_APPROVE: ${{ inputs.auto-approve }}

@@ -302,6 +302,108 @@ class ListPullRequestCommentsTool(GitHubTool):
         return result
 
 
+class CreatePullRequestReviewTool(GitHubTool):
+    """Tool for creating a pull request review."""
+
+    @property
+    def name(self) -> str:
+        return "create_pull_request_review"
+
+    @property
+    def description(self) -> str:
+        return "Create a review on a pull request with the specified event type ('APPROVE', 'REQUEST_CHANGES', or 'COMMENT')"
+
+    @property
+    def parameters(self) -> dict[str, Any]:
+        return {
+            "repo": {
+                "type": "string",
+                "description": "Repository name with owner (e.g., 'owner/repo')",
+                "required": True,
+            },
+            "pr_number": {
+                "type": "integer",
+                "description": "Pull request number",
+                "required": True,
+            },
+            "event": {
+                "type": "string",
+                "description": "Review event type: 'APPROVE', 'REQUEST_CHANGES', or 'COMMENT'",
+                "required": True,
+            },
+            "body": {
+                "type": "string",
+                "description": "Comment to include with the review",
+                "required": False,
+            },
+            "commit_id": {
+                "type": "string",
+                "description": "The SHA of the commit to review",
+                "required": False,
+            },
+            "comments": {
+                "type": "array",
+                "description": "List of review comments to add to specific lines",
+                "required": False,
+                "items": {
+                    "type": "object",
+                    "properties": {
+                        "path": {
+                            "type": "string",
+                            "description": "The relative path to the file to comment on",
+                        },
+                        "position": {
+                            "type": "integer",
+                            "description": "The line index in the diff to comment on",
+                        },
+                        "body": {
+                            "type": "string",
+                            "description": "The text of the comment",
+                        },
+                    },
+                },
+            },
+        }
+
+    def execute(self, parameters: dict[str, Any]) -> dict[str, Any]:
+        repo = self.github.get_repo(parameters["repo"])
+        pr = repo.get_pull(parameters["pr_number"])
+
+        # Prepare parameters for create_review
+        kwargs = {"event": parameters["event"]}
+
+        if "body" in parameters:
+            kwargs["body"] = parameters["body"]
+        elif parameters["event"] == "APPROVE":
+            kwargs["body"] = "Approved after review"
+
+        if "commit_id" in parameters:
+            commit = repo.get_commit(parameters["commit_id"])
+            kwargs["commit"] = commit
+
+        if "comments" in parameters:
+            review_comments = []
+            for comment in parameters["comments"]:
+                review_comment = {
+                    "path": comment["path"],
+                    "position": comment["position"],
+                    "body": comment["body"],
+                }
+                review_comments.append(review_comment)
+            kwargs["comments"] = review_comments
+
+        review = pr.create_review(**kwargs)
+
+        return {
+            "id": review.id,
+            "state": review.state,
+            "body": review.body,
+            "submitted_at": (
+                review.submitted_at.isoformat() if review.submitted_at else None
+            ),
+        }
+
+
 class CreatePullRequestReviewCommentTool(GitHubTool):
     """Tool for creating a pull request review comment."""
 
@@ -752,52 +854,3 @@ class GetRepositoryStatsTool(GitHubTool):
             stats["code_frequency"] = "Stats unavailable"
 
         return stats
-
-
-class ApprovePullRequestTool(GitHubTool):
-    """Tool for approving a pull request."""
-
-    @property
-    def name(self) -> str:
-        return "approve_pull_request"
-
-    @property
-    def description(self) -> str:
-        return "Approve a pull request if the review is favorable"
-
-    @property
-    def parameters(self) -> dict[str, Any]:
-        return {
-            "repo": {
-                "type": "string",
-                "description": "Repository name with owner (e.g., 'owner/repo')",
-                "required": True,
-            },
-            "pr_number": {
-                "type": "integer",
-                "description": "Pull request number",
-                "required": True,
-            },
-            "body": {
-                "type": "string",
-                "description": "Comment to include with the approval",
-                "required": False,
-            },
-        }
-
-    def execute(self, parameters: dict[str, Any]) -> dict[str, Any]:
-        repo = self.github.get_repo(parameters["repo"])
-        pr = repo.get_pull(parameters["pr_number"])
-
-        # Create a review with APPROVE event
-        body = parameters.get("body", "Approved after AI review")
-        review = pr.create_review(body=body, event="APPROVE")
-
-        return {
-            "id": review.id,
-            "state": review.state,
-            "body": review.body,
-            "submitted_at": (
-                review.submitted_at.isoformat() if review.submitted_at else None
-            ),
-        }

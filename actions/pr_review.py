@@ -149,18 +149,6 @@ class PRReviewAction:
                     )
 
             # Construct message for the agent
-            auto_approve = os.environ.get("AUTO_APPROVE", "false").lower() == "true"
-            approval_instruction = ""
-
-            if auto_approve:
-                approval_instruction = (
-                    f"\n\n6. IMPORTANT: First provide a complete review with all the sections above. "
-                    f"Then, as a SEPARATE STEP AFTER your complete review, if you believe the PR should be approved, "
-                    f"explicitly call the approve_pull_request tool with: "
-                    f'repo="{repo_name}", pr_number={pr_number}, and a SHORT approval message. '
-                    f"Only call this tool if you're confident the PR meets quality standards and is ready to merge."
-                )
-
             message = (
                 f"Please review this pull request:\n\n"
                 f"Title: {pr_info.get('title', 'No title')}\n"
@@ -174,7 +162,10 @@ class PRReviewAction:
                 f"4. Suggestions for improvement\n"
                 f"5. Overall assessment (approve, request changes, comment)"
                 f"6. If applicable, use the create_pull_request_review_comment tool to add comments/suggestions to the PR on specific lines or files"
-                f"{approval_instruction}"
+                f"\n\n7. IMPORTANT: Provide a complete review with all the sections above. "
+                f"then explicitly call the create_pull_request_review tool with: "
+                f'repo="{repo_name}", pr_number={pr_number}, and a message. '
+                f"Only approve it if you're confident the PR meets quality standards and is ready to merge, else request changes."
             )
 
             # Process message with agent

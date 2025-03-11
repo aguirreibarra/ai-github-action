@@ -135,7 +135,6 @@ jobs:
 | `max-files` | Maximum files to review in PR | No | 10 |
 | `include-patterns` | Glob patterns for files to include | No | - |
 | `exclude-patterns` | Glob patterns for files to exclude | No | - |
-| `auto-approve` | Automatically approve PRs with favorable reviews | No | false |
 
 ## Debugging with LOG_LEVEL
 
@@ -160,36 +159,6 @@ jobs:
 - Use `DEBUG` for maximum verbosity when troubleshooting issues
 - Use `INFO` for normal operations (default)
 - Use `WARNING` or `ERROR` to reduce log output in production environments
-
-## Automatic PR Approval
-
-When the `auto-approve` parameter is set to `true`, the action will allow the AI to directly approve pull requests that it determines meet quality standards. Rather than relying on simplistic text pattern matching, the AI will explicitly call the approval tool when it deems a PR ready to merge.
-
-```yaml
-name: AI PR Review with Auto-Approval
-
-on:
-  pull_request:
-    types: [opened, synchronize]
-
-jobs:
-  review:
-    runs-on: ubuntu-latest
-    steps:
-      - uses: actions/checkout@v3
-        with:
-          fetch-depth: 0
-          
-      - name: AI PR Review
-        uses: aguirreibarra/ai-github-action@main
-        with:
-          action-type: pr-review
-          openai-api-key: ${{ secrets.OPENAI_API_KEY }}
-          github-token: ${{ secrets.GITHUB_TOKEN }}
-          auto-approve: true
-```
-
-Note: For automatic approval to work, the GitHub token must have sufficient permissions to submit pull request reviews with approval.
 
 ## Development
 

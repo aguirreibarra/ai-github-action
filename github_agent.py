@@ -10,6 +10,7 @@ ChatCompletionToolParam = Dict[str, Any]
 
 from tools.github_tools import (
     CreatePullRequestReviewCommentTool,
+    CreatePullRequestReviewTool,
     GetPullRequestTool,
     GetPullRequestFilesTool,
     GetPullRequestDiffTool,
@@ -20,7 +21,6 @@ from tools.github_tools import (
     AddIssueCommentTool,
     GetRepositoryFileContentTool,
     GetRepositoryStatsTool,
-    ApprovePullRequestTool,
 )
 
 logger = logging.getLogger("github-agent")
@@ -79,17 +79,9 @@ class GitHubAgent:
                     GetPullRequestDiffTool(self.github),
                     UpdateOrCreatePullRequestCommentTool(self.github),
                     CreatePullRequestReviewCommentTool(self.github),
+                    CreatePullRequestReviewTool(self.github),
                 ]
             )
-
-            auto_approve = os.environ.get("AUTO_APPROVE", "false").lower() == "true"
-            if auto_approve:
-                self._tool_implementations.append(ApprovePullRequestTool(self.github))
-                logger.info("PR approval tool is registered and available for use")
-            else:
-                logger.info(
-                    "PR approval tool is NOT registered (AUTO_APPROVE is not enabled)"
-                )
 
         if self.action_type == "issue-analyze":
             # Issue analysis tools
