@@ -418,6 +418,21 @@ class CreatePullRequestReviewCommentTool(GitHubTool):
     @property
     def parameters(self) -> dict[str, Any]:
         return {
+            "repo": {
+                "type": "string",
+                "description": "Repository name with owner (e.g., 'owner/repo')",
+                "required": True,
+            },
+            "pr_number": {
+                "type": "integer",
+                "description": "Pull request number",
+                "required": True,
+            },
+            "commit_id": {
+                "type": "string",
+                "description": "The SHA of the commit to review",
+                "required": True,
+            },
             "body": {
                 "type": "string",
                 "description": "Comment content, supports Markdown",
