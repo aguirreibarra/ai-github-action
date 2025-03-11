@@ -9,6 +9,7 @@ from github import Github
 ChatCompletionToolParam = Dict[str, Any]
 
 from tools.github_tools import (
+    CreatePullRequestReviewCommentTool,
     GetPullRequestTool,
     GetPullRequestFilesTool,
     GetPullRequestDiffTool,
@@ -77,6 +78,7 @@ class GitHubAgent:
                     GetPullRequestFilesTool(self.github),
                     GetPullRequestDiffTool(self.github),
                     UpdateOrCreatePullRequestCommentTool(self.github),
+                    CreatePullRequestReviewCommentTool(self.github),
                 ]
             )
 

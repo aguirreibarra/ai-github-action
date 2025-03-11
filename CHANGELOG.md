@@ -6,6 +6,7 @@ All notable changes to this project will be documented in this file.
 
 ### Added
 - Agent tool to create or update issue comment
+- Agent tool to comment/suggest changes on specific files/lines of a PR
 
 ### Changed
 - Agent will now edit existing comment on subsequent issue analysis

@@ -173,6 +173,7 @@ class PRReviewAction:
                 f"3. Potential issues or bugs\n"
                 f"4. Suggestions for improvement\n"
                 f"5. Overall assessment (approve, request changes, comment)"
+                f"6. If applicable, use the create_pull_request_review_comment tool to add comments/suggestions to the PR on specific lines or files"
                 f"{approval_instruction}"
             )
 

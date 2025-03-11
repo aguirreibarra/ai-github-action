@@ -302,6 +302,85 @@ class ListPullRequestCommentsTool(GitHubTool):
         return result
 
 
+class CreatePullRequestReviewCommentTool(GitHubTool):
+    """Tool for creating a pull request review comment."""
+
+    @property
+    def name(self) -> str:
+        return "create_pull_request_review_comment"
+
+    @property
+    def description(self) -> str:
+        return "Create a pull request review comment"
+
+    @property
+    def parameters(self) -> dict[str, Any]:
+        return {
+            "body": {
+                "type": "string",
+                "description": "Comment content, supports Markdown",
+                "required": True,
+            },
+            "path": {
+                "type": "string",
+                "description": "Path to the file",
+                "required": True,
+            },
+            "line": {
+                "type": "integer",
+                "description": "Line number to add the comment",
+                "required": False,
+            },
+            "side": {
+                "type": "string",
+                "description": "Side of the comment (LEFT or RIGHT)",
+                "required": False,
+            },
+            "start_line": {
+                "type": "integer",
+                "description": "Start line number for multi-line comments",
+                "required": False,
+            },
+            "start_side": {
+                "type": "string",
+                "description": "Side of the starting line (LEFT or RIGHT)",
+                "required": False,
+            },
+            "in_reply_to": {
+                "type": "integer",
+                "description": "Comment ID to reply to",
+                "required": False,
+            },
+            "subject_type": {
+                "type": "string",
+                "description": "Subject type (line or file)",
+                "required": False,
+            },
+            "as_suggestion": {
+                "type": "boolean",
+                "description": "Whether to add the comment as a suggestion",
+                "required": False,
+            },
+        }
+
+    def execute(self, parameters: dict[str, Any]) -> dict[str, Any]:
+        repo = self.github.get_repo(parameters["repo"])
+        pr = repo.get_pull(parameters["pr_number"])
+        commit = repo.get_commit(parameters["commit_id"])
+
+        comment = pr.create_review_comment(
+            body=parameters.pop("body"),
+            commit=commit,
+            path=parameters.pop("path"),
+            **{k: v for k, v in parameters.items() if v is not None},
+        )
+
+        return {
+            "id": comment.id,
+            "url": comment.html_url,
+        }
+
+
 class UpdateOrCreatePullRequestCommentTool(GitHubTool):
     """Tool for updating an existing AI review comment or creating a new one."""
 
