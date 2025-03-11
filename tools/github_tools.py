@@ -344,16 +344,10 @@ class UpdateOrCreatePullRequestCommentTool(GitHubTool):
         comments = list(pr.get_issue_comments())
         header_marker = parameters["header_marker"]
 
-        # Get bot's username
-        bot_user = self.github.get_user().login
-
         # Find existing AI review comment
         existing_comment = None
         for comment in comments:
-            if (
-                comment.body.startswith(header_marker)
-                and comment.user.login == bot_user
-            ):
+            if comment.body.startswith(header_marker):
                 existing_comment = comment
                 break
 
@@ -545,16 +539,9 @@ class UpdateOrCreateIssueCommentTool(GitHubTool):
         comments = list(issue.get_comments())
         header_marker = parameters["header_marker"]
 
-        # Get bot's username
-        bot_user = self.github.get_user().login
-
-        # Find existing AI comment made by this bot
         existing_comment = None
         for comment in comments:
-            if (
-                comment.body.startswith(header_marker)
-                and comment.user.login == bot_user
-            ):
+            if comment.body.startswith(header_marker):
                 existing_comment = comment
                 break
 

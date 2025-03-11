@@ -228,10 +228,6 @@ class TestGitHubTools(unittest.TestCase):
             "https://github.com/owner/repo/pull/123#issuecomment-333"
         )
 
-        # Add user mock to match the login condition in the tool
-        existing_comment.user = MagicMock()
-        existing_comment.user.login = self.github_mock.get_user.return_value.login
-
         # Set up list with the existing comment
         self.pr_mock.get_issue_comments.return_value = [existing_comment]
 
