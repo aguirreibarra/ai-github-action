@@ -34,6 +34,7 @@ class GitHubAgent:
         openai_api_key: str,
         model: str = "gpt-4o-mini",
         custom_prompt: Optional[str] = None,
+        action_type: Optional[str] = None,
     ):
         """Initialize the GitHub agent.
 
@@ -42,11 +43,13 @@ class GitHubAgent:
             openai_api_key: OpenAI API key
             model: OpenAI model to use
             custom_prompt: Custom system prompt for the AI
+            action_type: Type of action (pr-review, issue-analyze, etc.) to determine which tools to include
         """
         self.github_token = github_token
         self.openai_api_key = openai_api_key
         self.model = model
         self.custom_prompt = custom_prompt
+        self.action_type = action_type
 
         # Initialize GitHub client
         self.github = Github(github_token)
@@ -58,28 +61,42 @@ class GitHubAgent:
         self.tools = self._register_tools()
 
     def _register_tools(self) -> List[ChatCompletionToolParam]:
-        """Register available tools for the agent."""
-        self._tool_implementations = [
-            GetPullRequestTool(self.github),
-            GetPullRequestFilesTool(self.github),
-            GetPullRequestDiffTool(self.github),
-            UpdateOrCreatePullRequestCommentTool(self.github),
-            UpdateOrCreateIssueCommentTool(self.github),
-            GetRepositoryTool(self.github),
-            GetIssueTool(self.github),
-            AddIssueCommentTool(self.github),
-            GetRepositoryFileContentTool(self.github),
-            GetRepositoryStatsTool(self.github),
-        ]
+        """Register available tools for the agent based on action type."""
+        self._tool_implementations = []
 
-        # Only register the approval tool if auto_approve is enabled
-        auto_approve = os.environ.get("AUTO_APPROVE", "false").lower() == "true"
-        if auto_approve:
-            self._tool_implementations.append(ApprovePullRequestTool(self.github))
-            logger.info("PR approval tool is registered and available for use")
-        else:
-            logger.info(
-                "PR approval tool is NOT registered (AUTO_APPROVE is not enabled)"
+        # Common tools for all actions
+        self._tool_implementations.append(GetRepositoryTool(self.github))
+        self._tool_implementations.append(GetRepositoryFileContentTool(self.github))
+        self._tool_implementations.append(GetRepositoryStatsTool(self.github))
+
+        # Action-specific tools
+        if self.action_type == "pr-review":
+            self._tool_implementations.extend(
+                [
+                    GetPullRequestTool(self.github),
+                    GetPullRequestFilesTool(self.github),
+                    GetPullRequestDiffTool(self.github),
+                    UpdateOrCreatePullRequestCommentTool(self.github),
+                ]
+            )
+
+            auto_approve = os.environ.get("AUTO_APPROVE", "false").lower() == "true"
+            if auto_approve:
+                self._tool_implementations.append(ApprovePullRequestTool(self.github))
+                logger.info("PR approval tool is registered and available for use")
+            else:
+                logger.info(
+                    "PR approval tool is NOT registered (AUTO_APPROVE is not enabled)"
+                )
+
+        if self.action_type == "issue-analyze":
+            # Issue analysis tools
+            self._tool_implementations.extend(
+                [
+                    GetIssueTool(self.github),
+                    AddIssueCommentTool(self.github),
+                    UpdateOrCreateIssueCommentTool(self.github),
+                ]
             )
 
         # Format tools for OpenAI API and cast to the correct type
