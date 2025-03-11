@@ -47,11 +47,24 @@ jobs:
       run: |
         poetry run pytest --cov=./ --cov-report=xml
 
+  # This job builds and tests the Docker image
+  docker:
+    runs-on: ubuntu-latest
+    steps:
+    - uses: actions/checkout@v4
+
+    - name: Build Docker image
+      run: docker build -t ai-github-action .
+
+    - name: Test Docker image
+      run: |
+        docker run --rm ai-github-action --help || true
+
   # This job runs the AI PR Review on itself
   ai-pr-review:
     runs-on: ubuntu-latest
     if: github.event_name == 'pull_request'
-    needs: test
+    needs: [test, docker]
     steps:
     - uses: actions/checkout@v4
       with:
@@ -68,16 +81,3 @@ jobs:
         model: o3-mini
       env:
         LOG_LEVEL: INFO
-
-  # This job builds and tests the Docker image
-  docker:
-    runs-on: ubuntu-latest
-    steps:
-    - uses: actions/checkout@v4
-
-    - name: Build Docker image
-      run: docker build -t ai-github-action .
-
-    - name: Test Docker image
-      run: |
-        docker run --rm ai-github-action --help || true

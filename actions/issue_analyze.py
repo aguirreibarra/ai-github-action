@@ -60,11 +60,12 @@ class IssueAnalyzeAction:
 
             # Post comment to issue
             self.agent.execute_tool(
-                "add_issue_comment",
+                "update_or_create_issue_comment",
                 {
                     "repo": repo_name,
                     "issue_number": issue_number,
                     "body": f"## AI Issue Analysis\n\n{response['content']}",
+                    "header_marker": "## AI Issue Analysis",
                 },
             )
 
