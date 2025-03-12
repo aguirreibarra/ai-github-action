@@ -8,7 +8,7 @@ AI GitHub Action leverages the AI Agents framework to create intelligent GitHub 
 
 ## Features
 
-- Automated PR reviews with code quality feedback
+- Automated PR reviews with code quality feedback, approves PRs automatically when the AI review is favorable
 - Issue analysis and suggested responses
 - Code scanning for security vulnerabilities and best practices
 - Customizable AI prompts for different contexts
@@ -34,10 +34,6 @@ jobs:
   pr-review:
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4
-        with:
-          fetch-depth: 0
-          
       - name: AI PR Review
         uses: aguirreibarra/ai-github-action@main
         with:
@@ -52,11 +48,10 @@ The PR Review Action will analyze pull requests and post feedback as a comment. 
 
 - **Smart File Prioritization**: When a PR contains more files than the `max-files` limit, the action automatically prioritizes files with the most changes
 - **Customizable System Prompt**: Guide the AI's focus towards specific aspects like security, performance, or code style
-- **Automatic Approval**: Optionally approve PRs automatically when the AI review is favorable
 
 ### Issue Analyzer Action
 
-> **Warning**  
+> **Warning**
 > This action is currently under construction and may not be fully functional
 
 ```yaml
@@ -113,8 +108,6 @@ jobs:
   scan:
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v3
-      
       - name: AI Code Scan
         uses: aguirreibarra/ai-github-action@main
         with:
@@ -131,11 +124,8 @@ jobs:
 | `openai-api-key` | OpenAI API key | Yes | - |
 | `github-token` | GitHub token for API access | Yes | - |
 | `model` | OpenAI model to use | No | gpt-4o-mini |
+| `max-turns` | Maximum turns for the AI | No | 30 |
 | `custom-prompt` | Custom system prompt for the AI | No | - |
-| `max-files` | Maximum files to review in PR | No | 10 |
-| `include-patterns` | Glob patterns for files to include | No | - |
-| `exclude-patterns` | Glob patterns for files to exclude | No | - |
-| `auto-approve` | Automatically approve PRs with favorable reviews | No | false |
 
 ## Debugging with LOG_LEVEL
 
@@ -146,7 +136,6 @@ jobs:
   review:
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4
       - name: AI PR Review
         uses: aguirreibarra/ai-github-action@main
         with:
@@ -160,36 +149,6 @@ jobs:
 - Use `DEBUG` for maximum verbosity when troubleshooting issues
 - Use `INFO` for normal operations (default)
 - Use `WARNING` or `ERROR` to reduce log output in production environments
-
-## Automatic PR Approval
-
-When the `auto-approve` parameter is set to `true`, the action will allow the AI to directly approve pull requests that it determines meet quality standards. Rather than relying on simplistic text pattern matching, the AI will explicitly call the approval tool when it deems a PR ready to merge.
-
-```yaml
-name: AI PR Review with Auto-Approval
-
-on:
-  pull_request:
-    types: [opened, synchronize]
-
-jobs:
-  review:
-    runs-on: ubuntu-latest
-    steps:
-      - uses: actions/checkout@v3
-        with:
-          fetch-depth: 0
-          
-      - name: AI PR Review
-        uses: aguirreibarra/ai-github-action@main
-        with:
-          action-type: pr-review
-          openai-api-key: ${{ secrets.OPENAI_API_KEY }}
-          github-token: ${{ secrets.GITHUB_TOKEN }}
-          auto-approve: true
-```
-
-Note: For automatic approval to work, the GitHub token must have sufficient permissions to submit pull request reviews with approval.
 
 ## Development
 

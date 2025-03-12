@@ -1,18 +1,24 @@
 #!/usr/bin/env python3
 
-import os
 import sys
 import json
 import logging
-from src.github_agent import GitHubAgent
+import asyncio
+from src.constants import (
+    ACTION_TYPE,
+    GITHUB_EVENT_PATH,
+    GITHUB_TOKEN,
+    LOG_LEVEL,
+    OPENAI_API_KEY,
+)
 from src.actions.pr_review import PRReviewAction
 from src.actions.issue_analyze import IssueAnalyzeAction
 from src.actions.code_scan import CodeScanAction
 
+from agents import gen_trace_id, trace
+
 # Configure logging
-# Get log level from environment variable, default to INFO
-log_level_name = os.environ.get("LOG_LEVEL", "INFO").upper()
-log_level = getattr(logging, log_level_name, logging.INFO)
+log_level = getattr(logging, LOG_LEVEL, logging.INFO)
 
 # Configure root logger - this affects all loggers in the application
 logging.basicConfig(
@@ -27,67 +33,61 @@ logger.info(f"Logging initialized with level: {logging.getLevelName(log_level)}"
 
 def get_github_event():
     """Read GitHub event data from the event file."""
-    event_path = os.environ.get("GITHUB_EVENT_PATH")
-    if not event_path:
+    if not GITHUB_EVENT_PATH:
         logger.error("GITHUB_EVENT_PATH environment variable not set")
         sys.exit(1)
 
-    with open(event_path, "r") as f:
+    with open(GITHUB_EVENT_PATH, "r") as f:
         return json.load(f)
+
+
+async def async_main():
+    """Asynchronous main entry point for the GitHub Action."""
+    event = get_github_event()
+
+    if not ACTION_TYPE:
+        logger.fatal("ACTION_TYPE input not provided")
+        sys.exit(1)
+
+    if not GITHUB_TOKEN:
+        logger.fatal("GITHUB_TOKEN input not provided")
+        sys.exit(1)
+
+    if not OPENAI_API_KEY:
+        logger.fatal("OPENAI_API_KEY input not provided")
+        sys.exit(1)
+
+    # Generate a trace ID for the entire action
+    trace_id = gen_trace_id()
+    logger.info(f"Action trace ID: {trace_id}")
+    logger.info(f"View trace: https://platform.openai.com/traces/{trace_id}")
+
+    # Run appropriate action based on action_type with tracing
+    with trace("GitHub Action", trace_id=trace_id):
+        try:
+            if ACTION_TYPE == "pr-review":
+                action = PRReviewAction(event)
+                await action.run()
+            elif ACTION_TYPE == "issue-analyze":
+                action = IssueAnalyzeAction(event)
+                await action.run()
+            elif ACTION_TYPE == "code-scan":
+                action = CodeScanAction(event)
+                await action.run()
+            else:
+                logger.error(f"Unknown action type: {ACTION_TYPE}")
+                sys.exit(1)
+
+            logger.info("Action completed successfully")
+
+        except Exception as e:
+            logger.error(f"Error running action: {str(e)}", exc_info=True)
+            sys.exit(1)
 
 
 def main():
     """Main entry point for the GitHub Action."""
-    # Get GitHub event data
-    event = get_github_event()
-
-    # Get action type from inputs
-    action_type = os.environ.get("ACTION_TYPE")
-    if not action_type:
-        logger.error("ACTION_TYPE input not provided")
-        sys.exit(1)
-
-    # Get GitHub token and OpenAI API key
-    github_token = os.environ.get("GITHUB_TOKEN")
-    openai_api_key = os.environ.get("OPENAI_API_KEY")
-
-    if not github_token:
-        logger.error("GITHUB_TOKEN input not provided")
-        sys.exit(1)
-
-    if not openai_api_key:
-        logger.error("OPENAI_API_KEY input not provided")
-        sys.exit(1)
-
-    # Initialize GitHub agent
-    agent = GitHubAgent(
-        github_token=github_token,
-        openai_api_key=openai_api_key,
-        model=os.environ.get("MODEL", "gpt-4o-mini"),
-        custom_prompt=os.environ.get("CUSTOM_PROMPT"),
-        action_type=action_type,
-    )
-
-    # Run appropriate action based on action_type
-    try:
-        if action_type == "pr-review":
-            action = PRReviewAction(agent, event)
-            action.run()
-        elif action_type == "issue-analyze":
-            action = IssueAnalyzeAction(agent, event)
-            action.run()
-        elif action_type == "code-scan":
-            action = CodeScanAction(agent, event)
-            action.run()
-        else:
-            logger.error(f"Unknown action type: {action_type}")
-            sys.exit(1)
-
-        logger.info("Action completed successfully")
-
-    except Exception as e:
-        logger.error(f"Error running action: {str(e)}")
-        sys.exit(1)
+    asyncio.run(async_main())
 
 
 if __name__ == "__main__":

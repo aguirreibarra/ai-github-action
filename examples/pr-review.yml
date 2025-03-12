@@ -14,10 +14,6 @@ jobs:
   pr-review:
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4
-        with:
-          fetch-depth: 0
-          
       - name: AI PR Review
         uses: aguirreibarra/ai-github-action@main
         with:
@@ -25,18 +21,10 @@ jobs:
           action-type: pr-review
           openai-api-key: ${{ secrets.OPENAI_API_KEY }}
           github-token: ${{ secrets.GITHUB_TOKEN }}
-          
+
           # Model selection (optional, defaults to gpt-4o-mini)
-          model: "gpt-4o"
-          
-          # File filtering options
-          max-files: 15
-          include-patterns: "*.py,*.js,*.ts,*.jsx,*.tsx,*.java,*.html,*.css,*.scss"
-          exclude-patterns: "**/__tests__/**,**/test/**,**/dist/**,**/node_modules/**,**/vendor/**"
-          
-          # Optional: Enables automatic PR approval if AI review is favorable
-          auto-approve: "false"
-          
+          model: "o3-mini"
+
           # Optional: Custom system prompt to guide the AI review
           custom-prompt: >
             You are an expert code reviewer focused on security, performance, and best practices.

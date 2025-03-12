@@ -31,6 +31,4 @@ jobs:
           action-type: code-scan
           openai-api-key: ${{ secrets.OPENAI_API_KEY }}
           github-token: ${{ secrets.GITHUB_TOKEN }}
-          max-files: 20
-          include-patterns: "src/**/*.py,src/**/*.js,lib/**/*.ts"
-          exclude-patterns: "**/__tests__/**,**/test/**,**/dist/**,**/node_modules/**"
+

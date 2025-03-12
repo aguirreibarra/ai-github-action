@@ -511,6 +511,20 @@ files = [
 ]
 
 [[package]]
+name = "griffe"
+version = "1.6.0"
+description = "Signatures for entire Python programs. Extract the structure, the frame, the skeleton of your project, to generate API documentation or find breaking changes in your API."
+optional = false
+python-versions = ">=3.9"
+files = [
+    {file = "griffe-1.6.0-py3-none-any.whl", hash = "sha256:9f1dfe035d4715a244ed2050dfbceb05b1f470809ed4f6bb10ece5a7302f8dd1"},
+    {file = "griffe-1.6.0.tar.gz", hash = "sha256:eb5758088b9c73ad61c7ac014f3cdfb4c57b5c2fcbfca69996584b702aefa354"},
+]
+
+[package.dependencies]
+colorama = ">=0.4"
+
+[[package]]
 name = "h11"
 version = "0.14.0"
 description = "A pure-Python, bring-your-own-I/O implementation of HTTP/1.1"
@@ -788,6 +802,25 @@ typing-extensions = ">=4.11,<5"
 [package.extras]
 datalib = ["numpy (>=1)", "pandas (>=1.2.3)", "pandas-stubs (>=1.1.0.11)"]
 realtime = ["websockets (>=13,<15)"]
+
+[[package]]
+name = "openai-agents"
+version = "0.0.3"
+description = "OpenAI Agents SDK"
+optional = false
+python-versions = ">=3.9"
+files = [
+    {file = "openai_agents-0.0.3-py3-none-any.whl", hash = "sha256:74ac0004e1f95d383863a41ab819cfb4bca9939c67ed74b26a1265a173bfdeb4"},
+    {file = "openai_agents-0.0.3.tar.gz", hash = "sha256:f0958b94e775aa3b50c00309896fb1a009823c785bc9a6d0a0b853149f5b5ce6"},
+]
+
+[package.dependencies]
+griffe = ">=1.5.6,<2"
+openai = ">=1.66.2"
+pydantic = ">=2.10,<3"
+requests = ">=2.0,<3"
+types-requests = ">=2.0,<3"
+typing-extensions = ">=4.12.2,<5"
 
 [[package]]
 name = "packaging"
@@ -1237,6 +1270,20 @@ slack = ["slack-sdk"]
 telegram = ["requests"]
 
 [[package]]
+name = "types-requests"
+version = "2.32.0.20250306"
+description = "Typing stubs for requests"
+optional = false
+python-versions = ">=3.9"
+files = [
+    {file = "types_requests-2.32.0.20250306-py3-none-any.whl", hash = "sha256:25f2cbb5c8710b2022f8bbee7b2b66f319ef14aeea2f35d80f18c9dbf3b60a0b"},
+    {file = "types_requests-2.32.0.20250306.tar.gz", hash = "sha256:0962352694ec5b2f95fda877ee60a159abdf84a0fc6fdace599f20acb41a03d1"},
+]
+
+[package.dependencies]
+urllib3 = ">=2"
+
+[[package]]
 name = "typing-extensions"
 version = "4.12.2"
 description = "Backported and Experimental Type Hints for Python 3.8+"
@@ -1355,4 +1402,4 @@ files = [
 [metadata]
 lock-version = "2.0"
 python-versions = "^3.12"
-content-hash = "bb1a09935201360266f94d45b3349821362ddb7b4ac2db717a2d29e2dc16ab56"
+content-hash = "4f3740cae959d448cd8ce67d3750976a5ea799c8530d05e4974cdaaf99d23de0"
