@@ -34,5 +34,8 @@ RUN poetry install --without dev --no-interaction --no-ansi
 # Copy the action code
 COPY . .
 
+# Add the app directory to PYTHONPATH to make imports work
+ENV PYTHONPATH="/app:${PYTHONPATH}"
+
 # Set the entrypoint
 ENTRYPOINT ["python", "/app/src/main.py"]
