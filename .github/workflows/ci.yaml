@@ -41,7 +41,7 @@ jobs:
 
     - name: Type check with mypy
       run: |
-        poetry run mypy --ignore-missing-imports .
+        make mypy
 
     - name: Test with pytest
       run: |
