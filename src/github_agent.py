@@ -12,6 +12,7 @@ from src.tools.github_tools import (
     GetPullRequestTool,
     GetPullRequestFilesTool,
     GetPullRequestDiffTool,
+    GitHubTool,
     UpdateOrCreateIssueCommentTool,
     UpdateOrCreatePullRequestCommentTool,
     GetRepositoryTool,
@@ -62,7 +63,7 @@ class GitHubAgent:
 
     def _register_tools(self) -> List[ChatCompletionToolParam]:
         """Register available tools for the agent based on action type."""
-        self._tool_implementations = []
+        self._tool_implementations: List[GitHubTool] = []
 
         # Common tools for all actions
         self._tool_implementations.append(GetRepositoryTool(self.github))
@@ -186,16 +187,23 @@ class GitHubAgent:
                 iteration_count += 1
 
                 # Call the OpenAI API with proper typing
-                response = self.client.chat.completions.create(
-                    model=self.model,
-                    messages=messages,
-                    tools=self.tools,
-                    tool_choice="auto",
+                from typing import cast, Any
+                from openai.types.chat import ChatCompletion
+
+                # Use keyword args and properly cast types to satisfy the type checker
+                response = cast(
+                    ChatCompletion,
+                    self.client.chat.completions.create(
+                        model=self.model,
+                        messages=cast(Any, messages),
+                        tools=cast(Any, self.tools),
+                        tool_choice="auto",
+                    ),
                 )
 
                 assistant_message = response.choices[0].message
                 # Convert message object to dict format for the conversation history
-                assistant_dict = {
+                assistant_dict: Dict[str, Any] = {
                     "role": "assistant",
                     "content": assistant_message.content,
                 }
