@@ -1,7 +1,7 @@
 import os
 import unittest
 from unittest.mock import MagicMock, patch
-from actions.pr_review import PRReviewAction
+from src.actions.pr_review import PRReviewAction
 
 
 class TestPRReviewAction(unittest.TestCase):

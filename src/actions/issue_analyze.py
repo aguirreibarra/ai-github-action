@@ -1,7 +1,7 @@
 import logging
 from typing import Any
 
-from github_agent import GitHubAgent
+from src.github_agent import GitHubAgent
 
 logger = logging.getLogger("issue-analyze-action")
 

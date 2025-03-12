@@ -35,4 +35,4 @@ RUN poetry install --without dev --no-interaction --no-ansi
 COPY . .
 
 # Set the entrypoint
-ENTRYPOINT ["python", "/app/main.py"]
+ENTRYPOINT ["python", "/app/src/main.py"]
