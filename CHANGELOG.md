@@ -5,10 +5,16 @@ All notable changes to this project will be documented in this file.
 ## [Unreleased]
 
 ### Added
-- Agent tool to create or update issue comment
+- Consistent structured outputs
+- PR Review action can choose between commenting, requesting changes, or approve PRs.
+- Introduced `max-turns` parameter.
 
 ### Changed
-- Agent will now edit existing comment on subsequent issue analysis
+- Refactored codebase to integrate openai-agents-sdk
+
+### Removed
+- Removed the `auto-approval` input. The agents will aprove PRs if they consider them approvable.
+- Removed the `max-files`, `include-patterns` and `exclude-patterns` inputs. They were removed at the moment for easier integration with OpenAI agents SDK.
 
 ## [1.1.0] - 2025-03-09
 

@@ -1,74 +1,88 @@
+"""
+Action for analyzing GitHub issues using OpenAI Agents SDK.
+"""
+
 import logging
 from typing import Any
 
-from src.github_agent import GitHubAgent
+from agents import Runner, custom_span
+from github import Github
 
+from src.constants import CUSTOM_PROMPT, GITHUB_TOKEN, MAX_TURNS, MODEL
+from src.github_agents.issue_analyze_agent import create_issue_analyze_agent
+from src.context.github_context import GithubContext
+
+# Configure logger
 logger = logging.getLogger("issue-analyze-action")
 
 
 class IssueAnalyzeAction:
     """Action for analyzing GitHub issues."""
 
-    def __init__(self, agent: GitHubAgent, event: dict[str, Any]):
-        """Initialize the issue analysis action.
+    def __init__(self, event: dict[str, Any]):
+        """Initialize the issue analyze action.
 
         Args:
-            agent: The GitHub agent
             event: The GitHub event data
         """
-        self.agent = agent
+        logger.info("Initializing Issue Analysis Action")
+        self.agent = create_issue_analyze_agent(
+            model=MODEL, custom_prompt=CUSTOM_PROMPT
+        )
         self.event = event
 
-    def run(self) -> None:
-        """Run the issue analysis action."""
-        try:
-            # Extract issue information from event
-            issue_number = self.event.get("issue", {}).get("number")
-            repo_name = self.event.get("repository", {}).get("full_name")
+    async def run(self) -> None:
+        """Run the issue analyze action asynchronously."""
+        logger.info("Starting issue analysis action")
 
-            if not issue_number or not repo_name:
-                logger.error("Missing required issue information in GitHub event")
-                raise ValueError("Missing required issue information in GitHub event")
+        with custom_span("Issue Analysis Action"):
+            try:
+                # Extract issue information from event
+                issue_number = self.event.get("issue", {}).get("number")
+                repo_name = self.event.get("repository", {}).get("full_name")
 
-            # Get issue information using agent
-            issue_info = self.agent.execute_tool(
-                "get_issue", {"repo": repo_name, "issue_number": issue_number}
-            )
+                logger.info(
+                    f"Processing issue #{issue_number} in repository {repo_name}"
+                )
 
-            # Get repository information
-            repo_info = self.agent.execute_tool("get_repository", {"repo": repo_name})
+                if not issue_number or not repo_name:
+                    logger.error("Missing required issue information in GitHub event")
+                    raise ValueError(
+                        "Missing required issue information in GitHub event"
+                    )
 
-            # Construct message for the agent
-            message = (
-                f"Please analyze this GitHub issue:\n\n"
-                f"Repository: {repo_name}\n"
-                f"Issue #{issue_number}: {issue_info.get('title', 'No title')}\n"
-                f"Description: {issue_info.get('body', 'No description')}\n\n"
-                f"Labels: {', '.join(label['name'] for label in issue_info.get('labels', []))}\n\n"
-                f"Repository description: {repo_info.get('description', 'No description')}\n\n"
-                f"Please provide:\n"
-                f"1. A summary of the issue\n"
-                f"2. Analysis of what the issue is about\n"
-                f"3. Suggested next steps or how to address it\n"
-                f"4. Recommend labels if appropriate\n"
-                f"5. Whether this should be classified as a bug, feature request, or question"
-            )
+                # Construct message for the agent
+                with custom_span("Run issue analysis"):
+                    message = (
+                        f"Please analyze this GitHub issue:\n\n"
+                        f"Repository: {repo_name}\n"
+                        f"Issue #{issue_number}: \n"
+                        f"Please provide as a comment to the issue:\n"
+                        f"1. A summary of the issue\n"
+                        f"2. The category (bug, feature request, question, etc.) with confidence level\n"
+                        f"3. Estimated complexity (low, medium, high)\n"
+                        f"4. Suggested priority (low, medium, high)\n"
+                        f"5. Code areas that might be related\n"
+                        f"6. Suggested next steps or solutions\n"
+                    )
 
-            # Process message with agent
-            context = f"Issue analysis for {repo_name}#{issue_number}"
-            response = self.agent.process_message(message, context)
+                    context = GithubContext(
+                        github_event=self.event,
+                        github_client=Github(GITHUB_TOKEN),
+                    )
+                    result = await Runner.run(
+                        starting_agent=self.agent,
+                        input=message,
+                        context=context,
+                        max_turns=MAX_TURNS,
+                    )
 
-            # Post comment to issue
-            self.agent.execute_tool(
-                "update_or_create_issue_comment",
-                {
-                    "repo": repo_name,
-                    "issue_number": issue_number,
-                    "body": f"## AI Issue Analysis\n\n{response['content']}",
-                    "header_marker": "## AI Issue Analysis",
-                },
-            )
+                    final_output = result.final_output
+                    logger.info(f"Final output: {final_output}")
 
-        except Exception as e:
-            logger.error(f"Error running issue analysis action: {str(e)}")
-            raise
+            except Exception as e:
+                logger.critical(
+                    f"Unhandled exception in issue analysis action: {str(e)}",
+                    exc_info=True,
+                )
+                raise

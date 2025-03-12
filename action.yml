@@ -22,20 +22,11 @@ inputs:
   custom-prompt:
     description: 'Custom system prompt for the AI'
     required: false
-  max-files:
-    description: 'Maximum files to review in PR'
+  max-turns:
+    description: 'Maximum turns for the AI'
     required: false
-    default: '10'
-  include-patterns:
-    description: 'Glob patterns for files to include, comma-separated'
-    required: false
-  exclude-patterns:
-    description: 'Glob patterns for files to exclude, comma-separated'
-    required: false
-  auto-approve:
-    description: 'Automatically approve PRs with favorable reviews'
-    required: false
-    default: 'false'
+    default: '30'
+
 
 runs:
   using: 'docker'
@@ -46,7 +37,4 @@ runs:
     ACTION_TYPE: ${{ inputs.action-type }}
     MODEL: ${{ inputs.model }}
     CUSTOM_PROMPT: ${{ inputs.custom-prompt }}
-    MAX_FILES: ${{ inputs.max-files }}
-    INCLUDE_PATTERNS: ${{ inputs.include-patterns }}
-    EXCLUDE_PATTERNS: ${{ inputs.exclude-patterns }}
-    AUTO_APPROVE: ${{ inputs.auto-approve }}
+    MAX_TURNS: ${{ inputs.max-turns }}
