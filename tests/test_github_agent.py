@@ -5,7 +5,7 @@ import sys
 
 sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
-from github_agent import GitHubAgent
+from src.github_agent import GitHubAgent
 
 
 class TestGitHubAgent(unittest.TestCase):
@@ -14,8 +14,8 @@ class TestGitHubAgent(unittest.TestCase):
         self.openai_client_mock = MagicMock()
 
         # Apply patches
-        self.github_patch = patch("github_agent.Github")
-        self.openai_patch = patch("github_agent.openai")
+        self.github_patch = patch("src.github_agent.Github")
+        self.openai_patch = patch("src.github_agent.openai")
 
         self.github_patch.start().return_value = self.github_mock
         self.openai_mock = self.openai_patch.start()
@@ -78,7 +78,7 @@ class TestGitHubAgent(unittest.TestCase):
         custom_prompt = self.agent._get_system_prompt()
         self.assertEqual(custom_prompt, "Custom prompt")
 
-    @patch("github_agent.GetPullRequestTool")
+    @patch("src.github_agent.GetPullRequestTool")
     def test_execute_tool(self, mock_tool_class):
         # Setup mock tool
         mock_tool = MagicMock()

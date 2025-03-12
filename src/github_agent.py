@@ -8,7 +8,7 @@ from github import Github
 # Define a type for OpenAI tool parameters
 ChatCompletionToolParam = Dict[str, Any]
 
-from tools.github_tools import (
+from src.tools.github_tools import (
     GetPullRequestTool,
     GetPullRequestFilesTool,
     GetPullRequestDiffTool,

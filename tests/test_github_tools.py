@@ -6,7 +6,7 @@ from datetime import datetime
 
 sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
-from tools.github_tools import (
+from src.tools.github_tools import (
     GetPullRequestTool,
     GetPullRequestFilesTool,
     GetPullRequestDiffTool,

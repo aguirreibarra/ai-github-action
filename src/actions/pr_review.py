@@ -3,7 +3,7 @@ import os
 import logging
 from typing import Any
 
-from github_agent import GitHubAgent
+from src.github_agent import GitHubAgent
 
 # Configure logger
 logger = logging.getLogger("pr-review-action")

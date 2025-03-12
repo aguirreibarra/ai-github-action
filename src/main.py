@@ -4,10 +4,10 @@ import os
 import sys
 import json
 import logging
-from github_agent import GitHubAgent
-from actions.pr_review import PRReviewAction
-from actions.issue_analyze import IssueAnalyzeAction
-from actions.code_scan import CodeScanAction
+from src.github_agent import GitHubAgent
+from src.actions.pr_review import PRReviewAction
+from src.actions.issue_analyze import IssueAnalyzeAction
+from src.actions.code_scan import CodeScanAction
 
 # Configure logging
 # Get log level from environment variable, default to INFO

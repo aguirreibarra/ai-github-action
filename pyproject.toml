@@ -4,7 +4,7 @@ version = "0.1.0"
 description = "GitHub Action for AI-powered automation"
 authors = ["Your Name <your.email@example.com>"]
 readme = "README.md"
-packages = [{include = "*.py"}]
+packages = [{include = "src"}]
 package-mode = false
 
 [tool.poetry.dependencies]
@@ -30,4 +30,4 @@ requires = ["poetry-core"]
 build-backend = "poetry.core.masonry.api"
 
 [tool.poetry.scripts]
-github-agent = "main:main" 
+github-agent = "src.main:main" 
