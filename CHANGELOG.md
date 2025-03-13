@@ -4,7 +4,7 @@ All notable changes to this project will be documented in this file.
 
 ## [Unreleased]
 
-## [2.0.0]
+## [2.0.0] - 2025-03-13
 
 ### Added
 - Consistent structured outputs.
