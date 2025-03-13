@@ -7,6 +7,7 @@ from pydantic import BaseModel, Field
 from agents import Agent
 
 from src.tools.github_function_tools import (
+    PRReviewEvent,
     get_repository,
     get_repository_file_content,
     get_repository_stats,
@@ -26,7 +27,9 @@ class PRReviewResponse(BaseModel):
     assessment: str = Field(
         description="Overall assessment (approve, request changes, comment)"
     )
-    approval_recommendation: bool = Field(description="Should this PR be approved?")
+    review_event: PRReviewEvent = Field(
+        description="The review event type to use for the PR review"
+    )
 
 
 def create_pr_review_agent(
@@ -46,16 +49,20 @@ def create_pr_review_agent(
     instructions = """
     You are a Staff Software Engineer reviewer that helps analyze GitHub pull requests.
 
-    Your task is to review the PR files, analyze the code changes, and provide:
+    Your task is to use the tools provided to review the PR files, analyze the code changes, and provide:
     1. A summary of the changes
     2. Code quality assessment
     3. Potential issues or bugs
     4. Suggestions for improvement
-    5. Overall assessment (approve, request changes, comment)
+    5. Overall assessment (APPROVE, REQUEST_CHANGES, COMMENT)
 
     Always provide constructive feedback with specific examples and suggestions.
 
-    Explicitly call the create_pull_request_review tool with your assessment. 
+    You MUST call the create_pull_request_review tool to submit your review, using the review_event field value as the event parameter.
+    Choose the appropriate review_event value for your assessment:
+    - PRReviewEvent.APPROVE: For PRs that meet quality standards and have no significant issues
+    - PRReviewEvent.REQUEST_CHANGES: For PRs with critical issues that must be fixed
+    - PRReviewEvent.COMMENT: For PRs with minor suggestions but no blocking issues
     """
 
     if custom_prompt:

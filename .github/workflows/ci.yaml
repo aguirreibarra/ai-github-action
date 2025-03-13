@@ -43,9 +43,9 @@ jobs:
       run: |
         make mypy
 
-    # - name: Test with pytest
-    #   run: |
-    #     poetry run pytest --cov=./ --cov-report=xml
+    - name: Test with pytest
+      run: |
+        poetry run pytest --cov=./ --cov-report=xml
 
   # This job builds and tests the Docker image
   docker:
