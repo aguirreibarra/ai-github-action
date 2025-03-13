@@ -25,10 +25,14 @@ isort = "^5.13.2"
 mypy = "^1.15.0"
 flake8 = "^7.1.2"
 pytest-cov = "^4.1.0"
+pytest-asyncio = "^0.23.5"
 
 [build-system]
 requires = ["poetry-core"]
 build-backend = "poetry.core.masonry.api"
 
 [tool.poetry.scripts]
-github-agent = "src.main:main" 
+github-agent = "src.main:main"
+
+[tool.pytest.ini_options]
+asyncio_mode = "auto" 
