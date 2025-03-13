@@ -11,7 +11,9 @@ from src.tools.github_function_tools import (
     get_repository_file_content,
     get_repository_stats,
     get_issue,
+    list_issue_comments,
     update_or_create_issue_comment,
+    add_labels_to_issue,
 )
 
 
@@ -76,7 +78,9 @@ def create_issue_analyze_agent(
         get_repository_file_content,
         get_repository_stats,
         get_issue,
+        list_issue_comments,
         update_or_create_issue_comment,
+        add_labels_to_issue,
     ]
 
     return Agent(

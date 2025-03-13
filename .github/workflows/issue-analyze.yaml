@@ -6,6 +6,8 @@ on:
 
 jobs:
   analyze:
+    permissions:
+      issues: write
     runs-on: ubuntu-latest
     # Only run when a specific label is applied or for new issues
     if: github.event.action == 'opened' || contains(github.event.issue.labels.*.name, 'needs-triage')

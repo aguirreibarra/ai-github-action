@@ -1,15 +1,18 @@
 # Tools package
 
 import json
-from typing import Any, Awaitable
+from typing import Any
 
 from agents import FunctionTool, RunContextWrapper
+from src.context.github_context import GithubContext
 from src.tools.github_function_tools import (
     create_pull_request_review,
     get_pull_request,
     get_pull_request_files,
     get_repository,
+    list_issue_comments,
     update_or_create_pr_comment,
+    add_labels_to_issue,
 )
 
 _TOOL_REGISTRY: dict[str, FunctionTool] = {
@@ -18,6 +21,8 @@ _TOOL_REGISTRY: dict[str, FunctionTool] = {
     "update_or_create_pr_comment": update_or_create_pr_comment,
     "get_repository": get_repository,
     "create_pull_request_review": create_pull_request_review,
+    "list_issue_comments": list_issue_comments,
+    "add_labels_to_issue": add_labels_to_issue,
 }
 
 
@@ -27,7 +32,7 @@ def get_tool_by_name(name: str) -> FunctionTool | None:
 
 
 async def execute_tool(
-    name: str, parameters: dict[str, Any], context: dict[str, Any] | None = None
+    name: str, parameters: dict[str, Any], context: GithubContext | None = None
 ) -> str:
     """Execute a tool by name with the given parameters.
 

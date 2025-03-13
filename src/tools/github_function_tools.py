@@ -433,7 +433,7 @@ async def create_pull_request_review(
     pr_number: int,
     body: str,
     event: PRReviewEvent = PRReviewEvent.COMMENT,
-) -> Dict[str, Any]:
+) -> dict[str, Any]:
     """Create a review for a pull request.
 
     Args:
@@ -462,3 +462,63 @@ async def create_pull_request_review(
             review.submitted_at.isoformat() if review.submitted_at else None
         ),
     }
+
+
+@function_tool
+async def list_issue_comments(
+    context: RunContextWrapper[GithubContext],
+    repo: str,
+    issue_number: int,
+) -> list[dict[str, Any]]:
+    """List all comments on an issue.
+
+    Args:
+        repo: Repository name with owner (e.g., 'owner/repo')
+        issue_number: Issue number
+
+    Returns:
+        List of dictionaries containing comment information
+    """
+    logger.info(
+        f"Tool call: list_issue_comments repo: {repo}, issue_number: {issue_number}"
+    )
+    repo_obj = context.context.github_client.get_repo(repo)
+    issue = repo_obj.get_issue(issue_number)
+    comments = issue.get_comments()
+
+    return [
+        {
+            "id": comment.id,
+            "body": comment.body,
+            "user": comment.user.login,
+            "created_at": comment.created_at.isoformat(),
+            "updated_at": comment.updated_at.isoformat(),
+        }
+        for comment in comments
+    ]
+
+
+@function_tool
+async def add_labels_to_issue(
+    context: RunContextWrapper[GithubContext],
+    repo: str,
+    issue_number: int,
+    labels: list[str],
+) -> dict[str, Any]:
+    """Add labels to an issue.
+
+    Args:
+        repo: Repository name with owner (e.g., 'owner/repo')
+        issue_number: Issue number
+        labels: List of labels to add to the issue
+
+    Returns:
+        Dictionary containing information about the added labels
+    """
+    logger.info(
+        f"Tool call: add_labels_to_issue repo: {repo}, issue_number: {issue_number}, labels: {labels}"
+    )
+    repo_obj = context.context.github_client.get_repo(repo)
+    issue = repo_obj.get_issue(issue_number)
+    issue.add_to_labels(*labels)
+    return {"success": True}

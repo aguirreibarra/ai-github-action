@@ -8,6 +8,8 @@ on:
 
 jobs:
   analyze:
+    permissions:
+      issues: write
     runs-on: ubuntu-latest
     if: github.event.action == 'opened' || contains(github.event.issue.labels.*.name, 'needs-triage')
     steps:
