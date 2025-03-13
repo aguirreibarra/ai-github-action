@@ -4,10 +4,14 @@ All notable changes to this project will be documented in this file.
 
 ## [Unreleased]
 
+## [2.0.0]
+
 ### Added
-- Consistent structured outputs
-- PR Review action can choose between commenting, requesting changes, or approve PRs.
+- Consistent structured outputs.
+- PR Review action can now choose between commenting, requesting changes, or approve PRs.
+- Content formatting of pr review action was improved.
 - Introduced `max-turns` parameter.
+- Tracing with OpenAI agents sdk
 
 ### Changed
 - Refactored codebase to integrate openai-agents-sdk
