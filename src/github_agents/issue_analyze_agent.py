@@ -7,13 +7,14 @@ from pydantic import BaseModel, Field
 from agents import Agent
 
 from src.tools.github_function_tools import (
+    add_issue_comment,
     get_repository,
     get_repository_file_content,
     get_repository_stats,
     get_issue,
     list_issue_comments,
-    update_or_create_issue_comment,
     add_labels_to_issue,
+    list_issue_labels,
 )
 
 
@@ -58,7 +59,7 @@ def create_issue_analyze_agent(
     instructions = """
     You are an issue analyzer that helps categorize and assess GitHub issues.
     
-    Your task is to analyze the issue and provide:
+    Your task is to analyze the issue using the tools provided and generate:
     1. A summary of the issue
     2. The category (bug, feature request, question, etc.) with confidence level
     3. Estimated complexity (low, medium, high)
@@ -68,6 +69,9 @@ def create_issue_analyze_agent(
     
     Be thorough in your analysis and provide specific recommendations based on 
     the issue content and repository context.
+
+    IMPORTANT: You MUST use the add_issue_comment tool to add a comment to the issue with your analysis.
+    Call the add_labels_to_issue tool to add the appropriate labels to the issue.
     """
 
     if custom_prompt:
@@ -79,8 +83,9 @@ def create_issue_analyze_agent(
         get_repository_stats,
         get_issue,
         list_issue_comments,
-        update_or_create_issue_comment,
         add_labels_to_issue,
+        add_issue_comment,
+        list_issue_labels,
     ]
 
     return Agent(
