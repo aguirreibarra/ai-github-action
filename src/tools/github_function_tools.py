@@ -243,6 +243,35 @@ async def get_issue(
 
 
 @function_tool
+async def add_issue_comment(
+    context: RunContextWrapper[GithubContext],
+    repo: str,
+    issue_number: int,
+    body: str,
+) -> Dict[str, Any]:
+    """Add a comment to an issue.
+
+    Args:
+        repo: Repository name with owner (e.g., 'owner/repo')
+        issue_number: Issue number
+        body: Comment content
+
+    Returns:
+        Dictionary containing information about the comment
+    """
+    logger.info(
+        f"Tool call: add_issue_comment repo: {repo}, issue_number: {issue_number}, body: {body}"
+    )
+    repo_obj = context.context.github_client.get_repo(repo)
+    issue = repo_obj.get_issue(issue_number)
+    comment = issue.create_comment(body)
+    return {
+        "id": comment.id,
+        "url": comment.html_url,
+    }
+
+
+@function_tool
 async def update_or_create_issue_comment(
     context: RunContextWrapper[GithubContext],
     repo: str,
@@ -522,3 +551,26 @@ async def add_labels_to_issue(
     issue = repo_obj.get_issue(issue_number)
     issue.add_to_labels(*labels)
     return {"success": True}
+
+
+@function_tool
+async def list_issue_labels(
+    context: RunContextWrapper[GithubContext],
+    repo: str,
+    issue_number: int,
+) -> list[str]:
+    """List all labels on an issue.
+
+    Args:
+        repo: Repository name with owner (e.g., 'owner/repo')
+        issue_number: Issue number
+
+    Returns:
+        List of labels on the issue
+    """
+    logger.info(
+        f"Tool call: list_issue_labels repo: {repo}, issue_number: {issue_number}"
+    )
+    repo_obj = context.context.github_client.get_repo(repo)
+    issue = repo_obj.get_issue(issue_number)
+    return [label.name for label in issue.labels]

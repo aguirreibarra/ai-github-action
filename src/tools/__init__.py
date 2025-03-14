@@ -13,6 +13,8 @@ from src.tools.github_function_tools import (
     list_issue_comments,
     update_or_create_pr_comment,
     add_labels_to_issue,
+    add_issue_comment,
+    list_issue_labels,
 )
 
 _TOOL_REGISTRY: dict[str, FunctionTool] = {
@@ -23,6 +25,8 @@ _TOOL_REGISTRY: dict[str, FunctionTool] = {
     "create_pull_request_review": create_pull_request_review,
     "list_issue_comments": list_issue_comments,
     "add_labels_to_issue": add_labels_to_issue,
+    "add_issue_comment": add_issue_comment,
+    "list_issue_labels": list_issue_labels,
 }
 
 
@@ -42,7 +46,7 @@ async def execute_tool(
         context: The context to pass to the tool
 
     Returns:
-        Awaitable[str]: The result of the tool call as a string
+        str: The result of the tool call as a string
     """
     tool_fn = get_tool_by_name(name)
     if tool_fn is not None:
