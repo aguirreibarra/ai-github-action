@@ -36,7 +36,6 @@ class PRReviewAction:
 
         with custom_span("PR Review Action"):
             try:
-                # Extract PR information from event
                 pr_number = self.event.get("pull_request", {}).get("number")
                 repo_name = self.event.get("repository", {}).get("full_name")
 
@@ -46,7 +45,6 @@ class PRReviewAction:
                     logger.error("Missing required PR information in GitHub event")
                     raise ValueError("Missing required PR information in GitHub event")
 
-                # Process message with agent
                 with custom_span("Run PR review"):
                     context = GithubContext(
                         github_event=self.event,

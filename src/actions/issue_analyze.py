@@ -12,7 +12,6 @@ from src.constants import CUSTOM_PROMPT, GITHUB_TOKEN, MAX_TURNS, MODEL
 from src.github_agents.issue_analyze_agent import create_issue_analyze_agent
 from src.context.github_context import GithubContext
 
-# Configure logger
 logger = logging.getLogger("issue-analyze-action")
 
 
@@ -37,7 +36,6 @@ class IssueAnalyzeAction:
 
         with custom_span("Issue Analysis Action"):
             try:
-                # Extract issue information from event
                 issue_number = self.event.get("issue", {}).get("number")
                 repo_name = self.event.get("repository", {}).get("full_name")
 
@@ -51,19 +49,11 @@ class IssueAnalyzeAction:
                         "Missing required issue information in GitHub event"
                     )
 
-                # Construct message for the agent
                 with custom_span("Run issue analysis"):
                     message = (
                         f"Please analyze this GitHub issue:\n\n"
                         f"Repository: {repo_name}\n"
                         f"Issue #{issue_number}: \n"
-                        f"Please provide as a comment to the issue:\n"
-                        f"1. A summary of the issue\n"
-                        f"2. The category (bug, feature request, question, etc.) with confidence level\n"
-                        f"3. Estimated complexity (low, medium, high)\n"
-                        f"4. Suggested priority (low, medium, high)\n"
-                        f"5. Code areas that might be related\n"
-                        f"6. Suggested next steps or solutions\n"
                     )
 
                     context = GithubContext(
