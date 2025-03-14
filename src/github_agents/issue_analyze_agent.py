@@ -48,7 +48,6 @@ def create_issue_analyze_agent(
     """Create an Issue Analysis agent with issue-specific tools.
 
     Args:
-        github_client: GitHub client
         model: Model name to use
         custom_prompt: Custom prompt override
 

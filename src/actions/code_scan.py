@@ -52,17 +52,7 @@ class CodeScanAction:
                         "Missing required repository information in GitHub event"
                     )
 
-                message = (
-                    f"Please perform a security and best practices scan on this repository:\n\n"
-                    f"Repository: {repo_name}\n"
-                    f"I'll provide the content of key files for you to analyze. "
-                    f"Please scan for security vulnerabilities, code quality issues, and best practices.\n"
-                    f"Please provide:\n"
-                    f"1. An overview of the code scan results\n"
-                    f"2. A list of issues found with severity levels\n"
-                    f"3. Good practices observed in the code\n"
-                    f"4. Overall recommendations for improvement"
-                )
+                message = f"Please scan the repository: {repo_name}\n"
 
                 # Process message with agent
                 with custom_span("Run code scan"):
