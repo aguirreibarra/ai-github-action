@@ -332,11 +332,11 @@ async def get_repository_file_content(
 
     Args:
         repo: Repository name with owner (e.g., 'owner/repo')
-        path: Path to the file
+        path: Path to the file/directory
         ref: The name of the commit/branch/tag
 
     Returns:
-        String containing the file content
+        String containing the content of the file/directory
     """
     logger.info(
         f"Tool call: get_repository_file_content repo: {repo}, path: {path}, ref: {ref}"

@@ -38,7 +38,6 @@ def create_pr_review_agent(
     """Create a PR Review agent with PR-specific tools.
 
     Args:
-        github_client: GitHub client
         model: Model name to use
         custom_prompt: Custom prompt override
 

@@ -7,6 +7,7 @@ from pydantic import BaseModel, Field
 from agents import Agent
 
 from src.tools.github_function_tools import (
+    create_issue,
     get_repository,
     get_repository_file_content,
     get_repository_stats,
@@ -44,7 +45,6 @@ def create_code_scan_agent(
     """Create a Code Scan agent for analyzing repository code.
 
     Args:
-        github_client: GitHub client
         model: Model name to use
         custom_prompt: Custom prompt override
 
@@ -69,20 +69,20 @@ def create_code_scan_agent(
     - Anti-patterns
     
     Be thorough and specific in your analysis, focusing on the most important issues first.
+
+    IMPORTANT: If you find any issues, create an issue in the repository using the create_issue tool.
     """
 
-    # Override with custom prompt if provided
     if custom_prompt:
         instructions = custom_prompt
 
-    # Tools for code scanning
     tools = [
         get_repository,
         get_repository_file_content,
         get_repository_stats,
+        create_issue,
     ]
 
-    # Create the agent
     return Agent(
         name="Code Scan Agent",
         instructions=instructions,

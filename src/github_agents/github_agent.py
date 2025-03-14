@@ -28,7 +28,6 @@ def create_github_agent(
     """Create a base GitHub agent with common tools.
 
     Args:
-        github_client: GitHub client
         model: Model name to use
         custom_prompt: Custom prompt override
 
