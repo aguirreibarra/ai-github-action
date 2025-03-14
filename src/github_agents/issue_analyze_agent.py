@@ -15,6 +15,7 @@ from src.tools.github_function_tools import (
     list_issue_comments,
     add_labels_to_issue,
     list_issue_labels,
+    search_repository,
 )
 
 
@@ -69,6 +70,8 @@ def create_issue_analyze_agent(
     Be thorough in your analysis and provide specific recommendations based on 
     the issue content and repository context.
 
+    Try to find the root cause of the issue or possible solutions and provide a detailed analysis.
+
     IMPORTANT: You MUST use the add_issue_comment tool to add a comment to the issue with your analysis.
     Call the add_labels_to_issue tool to add the appropriate labels to the issue.
     """
@@ -85,6 +88,7 @@ def create_issue_analyze_agent(
         add_labels_to_issue,
         add_issue_comment,
         list_issue_labels,
+        search_repository,
     ]
 
     return Agent(
