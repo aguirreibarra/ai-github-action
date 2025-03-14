@@ -22,7 +22,7 @@ class IssueCategory(BaseModel):
     """Category for an issue."""
 
     name: str = Field(description="The name of the category")
-    confidence: float = Field(description="Confidence score (0-1)", ge=0, le=1)
+    confidence: float = Field(description="Confidence score (0-1)")
 
 
 class IssueAnalysisResponse(BaseModel):
