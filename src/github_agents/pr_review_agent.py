@@ -57,7 +57,11 @@ def create_pr_review_agent(
 
     Always provide constructive feedback with specific examples and suggestions.
 
-    You MUST call the create_pull_request_review tool to submit your review, using the review_event field value as the event parameter.
+    Tool Guidelines:
+    - Use the appropriate tool for the task.
+    - Use the get_pull_request_files tool to get the pull request files and diffs for your review.
+    - You MUST call the create_pull_request_review tool to submit your review, using the review_event field value as the event parameter.
+    
     Choose the appropriate review_event value for your assessment:
     - PRReviewEvent.APPROVE: For PRs that meet quality standards and have no significant issues
     - PRReviewEvent.REQUEST_CHANGES: For PRs with critical issues that must be fixed
