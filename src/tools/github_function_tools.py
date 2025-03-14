@@ -332,7 +332,7 @@ async def get_repository_file_content(
 
     Args:
         repo: Repository name with owner (e.g., 'owner/repo')
-        path: Path to the file/directory
+        path: Path to the file/directory, you can use "/" to get the root directory
         ref: The name of the commit/branch/tag
 
     Returns:
@@ -353,6 +353,26 @@ async def get_repository_file_content(
         return file_content.decoded_content.decode("utf-8")
     except Exception as e:
         return f"Error: {str(e)}"
+
+
+@function_tool
+async def search_repository(
+    context: RunContextWrapper[GithubContext],
+    repo: str,
+    query: str,
+) -> Dict[str, Any]:
+    """Search a repository with a query.
+
+    Args:
+        repo: Repository name with owner (e.g., 'owner/repo')
+        query: Query to search for.
+
+    Returns:
+        Dictionary containing search results
+    """
+    logger.info(f"Tool call: search_repository repo: {repo}, query: {query}")
+    query = f"{query} in:{repo}"
+    return context.context.github_client.search_code(query)
 
 
 @function_tool

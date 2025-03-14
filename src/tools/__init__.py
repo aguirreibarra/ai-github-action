@@ -10,11 +10,13 @@ from src.tools.github_function_tools import (
     get_pull_request,
     get_pull_request_files,
     get_repository,
+    get_repository_file_content,
     list_issue_comments,
     update_or_create_pr_comment,
     add_labels_to_issue,
     add_issue_comment,
     list_issue_labels,
+    search_repository,
 )
 
 _TOOL_REGISTRY: dict[str, FunctionTool] = {
@@ -27,6 +29,8 @@ _TOOL_REGISTRY: dict[str, FunctionTool] = {
     "add_labels_to_issue": add_labels_to_issue,
     "add_issue_comment": add_issue_comment,
     "list_issue_labels": list_issue_labels,
+    "get_repository_file_content": get_repository_file_content,
+    "search_repository": search_repository,
 }
 
 
