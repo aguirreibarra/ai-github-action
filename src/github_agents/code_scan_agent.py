@@ -51,7 +51,7 @@ def create_code_scan_agent(
     Returns:
         Configured Agent instance
     """
-    # Default code scan instructions
+
     instructions = """
     You are a code scan agent that analyzes code in GitHub repositories.
     

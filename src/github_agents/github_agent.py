@@ -34,7 +34,7 @@ def create_github_agent(
     Returns:
         Configured Agent instance
     """
-    # Default instructions
+
     instructions = (
         "You are an AI assistant that helps with GitHub repositories. "
         "You can analyze repositories, files, and code. "
@@ -42,18 +42,15 @@ def create_github_agent(
         "Always use the available tools to gather information before making judgments."
     )
 
-    # Override with custom prompt if provided
     if custom_prompt:
         instructions = custom_prompt
 
-    # Register common tools that all GitHub agents need
     tools = [
         get_repository,
         get_repository_file_content,
         get_repository_stats,
     ]
 
-    # Create the agent
     return Agent(
         name="GitHub Agent",
         instructions=instructions,
