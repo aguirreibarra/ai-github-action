@@ -26,7 +26,7 @@ async def get_pull_request(
 
     Args:
         repo: Repository name with owner (e.g., 'owner/repo')
-        pr_number: Pull request number
+        pr_number: The number that identifies the pull request.
 
     Returns:
         Dictionary containing pull request information
@@ -179,7 +179,7 @@ async def update_or_create_pr_comment(
 
 
 @function_tool
-async def get_repository(
+async def get_repository_info(
     context: RunContextWrapper[GithubContext], repo: str
 ) -> Dict[str, Any]:
     """Get information about a repository.
@@ -356,22 +356,22 @@ async def get_repository_file_content(
 
 
 @function_tool
-async def search_repository(
+async def search_code(
     context: RunContextWrapper[GithubContext],
-    repo: str,
     query: str,
+    repo: str,
 ) -> Dict[str, Any]:
-    """Search a repository with a query.
+    """Search code in a repository with a query. Only the default branch is considered. In most cases, this will be the master branch.
 
     Args:
-        repo: Repository name with owner (e.g., 'owner/repo')
-        query: Query to search for.
+        query: The query contains one or more search keywords and qualifiers. Qualifiers allow you to limit your search to specific areas of GitHub. The REST API supports the same qualifiers as the web interface for GitHub.
+        repo: Repository name with owner (e.g., 'owner/repo'). This will appended to the query as a qualifier to limit the search to the specific repository.
 
     Returns:
         Dictionary containing search results
     """
-    logger.info(f"Tool call: search_repository repo: {repo}, query: {query}")
-    query = f"{query} in:{repo}"
+    logger.info(f"Tool call: search_code repo: {repo}, query: {query}")
+    query = f"{query} repo:{repo}"
     return context.context.github_client.search_code(query)
 
 

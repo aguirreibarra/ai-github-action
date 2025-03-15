@@ -8,12 +8,12 @@ from agents import Agent
 
 from src.tools.github_function_tools import (
     PRReviewEvent,
-    get_repository,
+    get_repository_info,
     get_repository_file_content,
-    get_repository_stats,
+    create_pull_request_review,
+    search_code,
     get_pull_request,
     get_pull_request_files,
-    create_pull_request_review,
 )
 
 
@@ -46,7 +46,7 @@ def create_pr_review_agent(
     """
 
     instructions = """
-    You are a Staff Software Engineer reviewer that helps analyze GitHub pull requests.
+    You are a pull request reviewer that helps analyze GitHub pull requests.
 
     Your task is to use the tools provided to review the PR files, analyze the code changes, and provide:
     1. A summary of the changes
@@ -57,26 +57,23 @@ def create_pr_review_agent(
 
     Always provide constructive feedback with specific examples and suggestions.
 
-    Tool Guidelines:
-    - Use the appropriate tool for the task.
-    - Use the get_pull_request_files tool to get the pull request files and diffs for your review.
-    - You MUST call the create_pull_request_review tool to submit your review, using the review_event field value as the event parameter.
-    
-    Choose the appropriate review_event value for your assessment:
-    - PRReviewEvent.APPROVE: For PRs that meet quality standards and have no significant issues
-    - PRReviewEvent.REQUEST_CHANGES: For PRs with critical issues that must be fixed
-    - PRReviewEvent.COMMENT: For PRs with minor suggestions but no blocking issues
+    IMPORTANT (Follow these steps in order):
+    1. You MUST use the get_pull_request tool to get information about the PR.
+    2. You MUST use the get_pull_request_files tool to fetch the diff of the files in the PR.
+    3. You can use the get_repository_file_content tool to get more context about the files in the PR.
+    4. You can use the search_code tool to search for code in the repository.
+    5. You MUST call the create_pull_request_review tool to submit your review.
     """
 
     if custom_prompt:
         instructions = custom_prompt
 
     tools = [
-        get_repository,
-        get_repository_file_content,
-        get_repository_stats,
         get_pull_request,
         get_pull_request_files,
+        get_repository_info,
+        get_repository_file_content,
+        search_code,
         create_pull_request_review,
     ]
 

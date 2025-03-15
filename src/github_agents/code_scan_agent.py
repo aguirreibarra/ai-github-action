@@ -8,7 +8,7 @@ from agents import Agent
 
 from src.tools.github_function_tools import (
     create_issue,
-    get_repository,
+    get_repository_info,
     get_repository_file_content,
     get_repository_stats,
 )
@@ -77,7 +77,7 @@ def create_code_scan_agent(
         instructions = custom_prompt
 
     tools = [
-        get_repository,
+        get_repository_info,
         get_repository_file_content,
         get_repository_stats,
         create_issue,

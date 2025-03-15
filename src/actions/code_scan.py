@@ -54,7 +54,6 @@ class CodeScanAction:
 
                 message = f"Please scan the repository: {repo_name}\n"
 
-                # Process message with agent
                 with custom_span("Run code scan"):
                     context = GithubContext(
                         github_event=self.event,

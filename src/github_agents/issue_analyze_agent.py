@@ -8,14 +8,14 @@ from agents import Agent
 
 from src.tools.github_function_tools import (
     add_issue_comment,
-    get_repository,
+    get_repository_info,
     get_repository_file_content,
     get_repository_stats,
     get_issue,
     list_issue_comments,
     add_labels_to_issue,
     list_issue_labels,
-    search_repository,
+    search_code,
 )
 
 
@@ -80,7 +80,7 @@ def create_issue_analyze_agent(
         instructions = custom_prompt
 
     tools = [
-        get_repository,
+        get_repository_info,
         get_repository_file_content,
         get_repository_stats,
         get_issue,
@@ -88,7 +88,7 @@ def create_issue_analyze_agent(
         add_labels_to_issue,
         add_issue_comment,
         list_issue_labels,
-        search_repository,
+        search_code,
     ]
 
     return Agent(
