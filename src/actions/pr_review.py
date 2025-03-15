@@ -50,9 +50,10 @@ class PRReviewAction:
                         github_event=self.event,
                         github_client=Github(GITHUB_TOKEN),
                     )
+                    input = f"Pull request review for {repo_name}#{pr_number}"
                     result = await Runner.run(
                         starting_agent=self.agent,
-                        input=f"Pull request review for {repo_name}#{pr_number}",
+                        input=input,
                         context=context,
                         max_turns=MAX_TURNS,
                     )
