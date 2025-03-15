@@ -805,13 +805,13 @@ realtime = ["websockets (>=13,<15)"]
 
 [[package]]
 name = "openai-agents"
-version = "0.0.3"
+version = "0.0.4"
 description = "OpenAI Agents SDK"
 optional = false
 python-versions = ">=3.9"
 files = [
-    {file = "openai_agents-0.0.3-py3-none-any.whl", hash = "sha256:74ac0004e1f95d383863a41ab819cfb4bca9939c67ed74b26a1265a173bfdeb4"},
-    {file = "openai_agents-0.0.3.tar.gz", hash = "sha256:f0958b94e775aa3b50c00309896fb1a009823c785bc9a6d0a0b853149f5b5ce6"},
+    {file = "openai_agents-0.0.4-py3-none-any.whl", hash = "sha256:5577c3ee994fe0bd200d7283e4f7a614b3af19afeebcfb07b6ca6039a8a50a5c"},
+    {file = "openai_agents-0.0.4.tar.gz", hash = "sha256:297e8d5faeca753e1b303d860b7ac94d03a7e10382be738163dc6a10a3b7cc1c"},
 ]
 
 [package.dependencies]
@@ -1420,4 +1420,4 @@ files = [
 [metadata]
 lock-version = "2.0"
 python-versions = "^3.12"
-content-hash = "cdb8491f088a06bf40f32169d4b49622dc17fd93f308a10630ccca92a73b7e5d"
+content-hash = "7a12f890d4678d7fe16b601645984eb7d67647f7ad7ba09a89b631668842c8e2"
