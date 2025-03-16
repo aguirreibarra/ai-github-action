@@ -46,7 +46,7 @@ def create_pr_review_agent(
     """
 
     instructions = """
-    You are a pull request reviewer that helps analyze GitHub pull requests.
+    You are a reviewer who helps analyze GitHub pull requests.
 
     Your task is to use the tools provided to review the PR files, analyze the code changes, and provide:
     1. A summary of the changes
