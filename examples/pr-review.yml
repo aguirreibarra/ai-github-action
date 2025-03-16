@@ -23,7 +23,7 @@ jobs:
           github-token: ${{ secrets.GITHUB_TOKEN }}
 
           # Model selection (optional, defaults to gpt-4o-mini)
-          model: "o3-mini"
+          model: gpt-4o-mini
 
           # Optional: Custom system prompt to guide the AI review
           custom-prompt: >
