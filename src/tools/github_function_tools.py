@@ -328,7 +328,7 @@ async def get_repository_file_content(
     repo: str,
     path: str,
     ref: Optional[str] = None,
-) -> list[ContentFile] | ContentFile | str:
+) -> dict[str, Any]:
     """Get the content of a file or directory in a repository.
 
     Args:
@@ -337,8 +337,7 @@ async def get_repository_file_content(
         ref: The name of the commit/branch/tag, defaults to the default branch
 
     Returns:
-        ContentFile object for a single file, list of ContentFile objects for a directory,
-        or error message string if an exception occurs
+        Dictionary with the content of the file/directory
     """
     logger.info(
         f"Tool call: get_repository_file_content repo: {repo}, path: {path}, ref: {ref}"
@@ -350,9 +349,41 @@ async def get_repository_file_content(
         else:
             file_content = repo_obj.get_contents(path, ref=ref)
 
-        return file_content
+        if isinstance(file_content, list):
+            return {
+                "type": "directory",
+                "files": [
+                    {
+                        "name": file.name,
+                        "content": file.decoded_content.decode("utf-8"),
+                        "path": file.path,
+                        "type": file.type,
+                        "size": file.size,
+                        "sha": file.sha,
+                        "url": file.url,
+                        "git_url": file.git_url,
+                        "html_url": file.html_url,
+                        "download_url": file.download_url,
+                    }
+                    for file in file_content
+                ],
+            }
+        return {
+            "type": file_content.type,
+            "content": file_content.decoded_content.decode("utf-8"),
+            "path": file_content.path,
+            "size": file_content.size,
+            "sha": file_content.sha,
+            "url": file_content.url,
+            "git_url": file_content.git_url,
+            "html_url": file_content.html_url,
+            "download_url": file_content.download_url,
+        }
     except Exception as e:
-        return f"Error: {str(e)}"
+        return {
+            "error": str(e),
+            "type": "error",
+        }
 
 
 @function_tool
