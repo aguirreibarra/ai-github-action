@@ -51,9 +51,6 @@ The PR Review Action will analyze pull requests and post feedback as a comment. 
 
 ### Issue Analyzer Action
 
-> **Warning**
-> This action is currently under construction and may not be fully functional
-
 ```yaml
 name: AI Issue Analysis
 
