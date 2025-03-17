@@ -292,7 +292,7 @@ def test_create_code_scan_agent():
 
     assert agent.name == "Code Scan Agent"
     assert "code scan agent" in agent.instructions.lower()
-    assert len(agent.tools) == 5
+    assert len(agent.tools) == 6
     assert agent.model == "test-model"
     assert agent.output_type == CodeScanResponse
 
