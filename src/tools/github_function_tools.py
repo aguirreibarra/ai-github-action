@@ -387,6 +387,60 @@ async def get_repository_file_content(
 
 
 @function_tool
+async def list_repository_files(
+    context: RunContextWrapper[GithubContext],
+    repo: str,
+    path: str | None = None,
+    ref: str | None = None,
+) -> dict[str, Any]:
+    """List files in a repository.
+
+    Args:
+        repo: Repository name with owner (e.g., 'owner/repo')
+        path: Path to the file/directory, empty string for root directory
+
+    Returns:
+        Dictionary with the files in the directory. Includes the type, name, size, sha, url, git_url, html_url, download_url, and path of each file.
+    """
+    logger.info(f"Tool call: list_repository_files repo: {repo}, path: {path}")
+    repo_obj = context.context.github_client.get_repo(repo)
+    if ref is not None:
+        files = repo_obj.get_contents(path, ref=ref)
+    else:
+        files = repo_obj.get_contents(path)
+    if isinstance(files, list):
+        return {
+            "type": "directory",
+            "files": [
+                {
+                    "name": file.name,
+                    "type": file.type,
+                    "size": file.size,
+                    "sha": file.sha,
+                    "url": file.url,
+                    "git_url": file.git_url,
+                    "html_url": file.html_url,
+                    "download_url": file.download_url,
+                    "path": file.path,
+                }
+                for file in files
+            ],
+        }
+    else:
+        return {
+            "type": files.type,
+            "name": files.name,
+            "size": files.size,
+            "sha": files.sha,
+            "url": files.url,
+            "git_url": files.git_url,
+            "html_url": files.html_url,
+            "download_url": files.download_url,
+            "path": files.path,
+        }
+
+
+@function_tool
 async def search_code(
     context: RunContextWrapper[GithubContext],
     query: str,
