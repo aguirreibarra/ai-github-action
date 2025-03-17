@@ -11,6 +11,7 @@ from src.tools.github_function_tools import (
     get_repository_info,
     get_repository_file_content,
     get_repository_stats,
+    search_code,
 )
 
 
@@ -81,6 +82,7 @@ def create_code_scan_agent(
         get_repository_file_content,
         get_repository_stats,
         create_issue,
+        search_code,
     ]
 
     return Agent(
