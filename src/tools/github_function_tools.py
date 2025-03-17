@@ -13,6 +13,7 @@ from typing import (
 from agents import RunContextWrapper, function_tool
 
 from src.context.github_context import GithubContext
+from github.ContentFile import ContentFile
 
 logger = logging.getLogger("github-tools")
 
@@ -22,14 +23,14 @@ logger = logging.getLogger("github-tools")
 async def get_pull_request(
     context: RunContextWrapper[GithubContext], repo: str, pr_number: int
 ) -> Dict[str, Any]:
-    """Get information about a pull request.
+    """Get detailed information about a pull request.
 
     Args:
         repo: Repository name with owner (e.g., 'owner/repo')
-        pr_number: The number that identifies the pull request.
+        pr_number: The number that identifies the pull request
 
     Returns:
-        Dictionary containing pull request information
+        Dictionary with pull request details including title, body, state, commits, etc.
     """
     logger.info(f"Tool call: get_pull_request repo: {repo}, pr_number: {pr_number}")
     repo_obj = context.context.github_client.get_repo(repo)
@@ -88,14 +89,14 @@ async def get_pull_request(
 async def get_pull_request_files(
     context: RunContextWrapper[GithubContext], repo: str, pr_number: int
 ) -> List[Dict[str, Any]]:
-    """Get the files changed in a pull request.
+    """Get files changed in a pull request.
 
     Args:
-        repo: Repository name in the format "owner/repo"
+        repo: Repository name with owner (e.g., 'owner/repo')
         pr_number: Pull request number
 
     Returns:
-        List of dictionaries containing file information
+        List of dictionaries with file details including filename, status, changes, etc.
     """
     logger.info(
         f"Tool call: get_pull_request_files repo: {repo}, pr_number: {pr_number}"
@@ -135,7 +136,7 @@ async def update_or_create_pr_comment(
     body: str,
     header_marker: str,
 ) -> Dict[str, Any]:
-    """Update an existing AI review comment or create a new one.
+    """Update an existing AI comment or create a new one on a pull request.
 
     Args:
         repo: Repository name with owner (e.g., 'owner/repo')
@@ -144,7 +145,7 @@ async def update_or_create_pr_comment(
         header_marker: Unique identifier at the beginning of comments made by this bot
 
     Returns:
-        Dictionary containing information about the comment
+        Dictionary with comment details including id, url, and action taken ('updated' or 'created')
     """
     logger.info(
         f"Tool call: update_or_create_pr_comment repo: {repo}, pr_number: {pr_number}, body: {body}, header_marker: {header_marker}"
@@ -182,13 +183,13 @@ async def update_or_create_pr_comment(
 async def get_repository_info(
     context: RunContextWrapper[GithubContext], repo: str
 ) -> Dict[str, Any]:
-    """Get information about a repository.
+    """Get basic information about a repository.
 
     Args:
         repo: Repository name with owner (e.g., 'owner/repo')
 
     Returns:
-        Dictionary containing repository information
+        Dictionary with repository details including name, description, language, stars, etc.
     """
     logger.info(f"Tool call: get_repository repo: {repo}")
     repo_obj = context.context.github_client.get_repo(repo)
@@ -213,14 +214,14 @@ async def get_repository_info(
 async def get_issue(
     context: RunContextWrapper[GithubContext], repo: str, issue_number: int
 ) -> Dict[str, Any]:
-    """Get information about an issue.
+    """Get detailed information about an issue.
 
     Args:
         repo: Repository name with owner (e.g., 'owner/repo')
         issue_number: Issue number
 
     Returns:
-        Dictionary containing issue information
+        Dictionary with issue details including title, body, state, comments, labels, etc.
     """
     logger.info(f"Tool call: get_issue repo: {repo}, issue_number: {issue_number}")
     repo_obj = context.context.github_client.get_repo(repo)
@@ -249,15 +250,15 @@ async def add_issue_comment(
     issue_number: int,
     body: str,
 ) -> Dict[str, Any]:
-    """Add a comment to an issue.
+    """Add a new comment to an issue.
 
     Args:
         repo: Repository name with owner (e.g., 'owner/repo')
         issue_number: Issue number
-        body: Comment content
+        body: Comment content, supports Markdown
 
     Returns:
-        Dictionary containing information about the comment
+        Dictionary with comment details including id and url
     """
     logger.info(
         f"Tool call: add_issue_comment repo: {repo}, issue_number: {issue_number}, body: {body}"
@@ -288,7 +289,7 @@ async def update_or_create_issue_comment(
         header_marker: Unique identifier at the beginning of comments made by this bot
 
     Returns:
-        Dictionary containing information about the comment
+        Dictionary with comment details including id, url, and action taken ('updated' or 'created')
     """
     logger.info(
         f"Tool call: update_or_create_issue_comment repo: {repo}, issue_number: {issue_number}, body: {body}, header_marker: {header_marker}"
@@ -325,18 +326,19 @@ async def update_or_create_issue_comment(
 async def get_repository_file_content(
     context: RunContextWrapper[GithubContext],
     repo: str,
-    path: str,
+    path: str = "",
     ref: Optional[str] = None,
-) -> str:
-    """Get the content of a file in a repository.
+) -> list[ContentFile] | ContentFile | str:
+    """Get the content of a file or directory in a repository.
 
     Args:
         repo: Repository name with owner (e.g., 'owner/repo')
-        path: Path to the file/directory, you can use "/" to get the root directory
-        ref: The name of the commit/branch/tag
+        path: Path to the file/directory, empty string for root directory
+        ref: The name of the commit/branch/tag, defaults to the default branch
 
     Returns:
-        String containing the content of the file/directory
+        ContentFile object for a single file, list of ContentFile objects for a directory,
+        or error message string if an exception occurs
     """
     logger.info(
         f"Tool call: get_repository_file_content repo: {repo}, path: {path}, ref: {ref}"
@@ -347,10 +349,8 @@ async def get_repository_file_content(
             file_content = repo_obj.get_contents(path)
         else:
             file_content = repo_obj.get_contents(path, ref=ref)
-        if isinstance(file_content, list):
-            return "This is a directory, not a file"
 
-        return file_content.decoded_content.decode("utf-8")
+        return file_content
     except Exception as e:
         return f"Error: {str(e)}"
 
@@ -360,15 +360,15 @@ async def search_code(
     context: RunContextWrapper[GithubContext],
     query: str,
     repo: str,
-) -> Dict[str, Any]:
-    """Search code in a repository with a query. Only the default branch is considered. In most cases, this will be the master branch.
+) -> list[ContentFile]:
+    """Search code in a repository with a query.
 
     Args:
-        query: The query contains one or more search keywords and qualifiers. Qualifiers allow you to limit your search to specific areas of GitHub. The REST API supports the same qualifiers as the web interface for GitHub.
+        query: Search query with keywords and qualifiers (supports GitHub search syntax)
         repo: Repository name with owner (e.g., 'owner/repo'). This will appended to the query as a qualifier to limit the search to the specific repository.
 
     Returns:
-        Dictionary containing search results
+        List of ContentFile objects matching the search query
     """
     logger.info(f"Tool call: search_code repo: {repo}, query: {query}")
     query = f"{query} repo:{repo}"
@@ -379,13 +379,13 @@ async def search_code(
 async def get_repository_stats(
     context: RunContextWrapper[GithubContext], repo: str
 ) -> Dict[str, Any]:
-    """Get statistics about a repository.
+    """Get statistical information about a repository.
 
     Args:
         repo: Repository name with owner (e.g., 'owner/repo')
 
     Returns:
-        Dictionary containing repository statistics
+        Dictionary with repository statistics including forks, stars, commit activity, etc.
     """
     logger.info(f"Tool call: get_repository_stats repo: {repo}")
     repo_obj = context.context.github_client.get_repo(repo)
@@ -446,11 +446,11 @@ async def create_issue(
     Args:
         repo: Repository name with owner (e.g., 'owner/repo')
         title: Issue title
-        body: Issue body content
-        labels: Optional list of labels to apply to the issue
+        body: Issue body content, supports Markdown
+        labels: Optional list of label names to apply to the issue
 
     Returns:
-        Dictionary containing information about the created issue
+        Dictionary with issue details including number, id, url, and title
     """
     logger.info(
         f"Tool call: create_issue repo: {repo}, title: {title}, body: {body}, labels: {labels}"
@@ -488,11 +488,11 @@ async def create_pull_request_review(
     Args:
         repo: Repository name with owner (e.g., 'owner/repo')
         pr_number: Pull request number
-        body: Comment content to include with the review
-        event: Event to include with the review (APPROVE, REQUEST_CHANGES, COMMENT)
+        body: Review comment content, supports Markdown
+        event: Review event type (APPROVE, REQUEST_CHANGES, or COMMENT)
 
     Returns:
-        Dictionary containing information about the review
+        Dictionary with review details including id, state, body, and submission time
     """
     logger.info(
         f"Tool call: create_pull_request_review repo: {repo}, pr_number: {pr_number}, body: {body}, event: {event}"
@@ -526,7 +526,7 @@ async def list_issue_comments(
         issue_number: Issue number
 
     Returns:
-        List of dictionaries containing comment information
+        List of dictionaries with comment details including id, body, user, and timestamps
     """
     logger.info(
         f"Tool call: list_issue_comments repo: {repo}, issue_number: {issue_number}"
@@ -554,15 +554,15 @@ async def add_labels_to_issue(
     issue_number: int,
     labels: list[str],
 ) -> dict[str, Any]:
-    """Add labels to an issue.
+    """Add labels to an existing issue.
 
     Args:
         repo: Repository name with owner (e.g., 'owner/repo')
         issue_number: Issue number
-        labels: List of labels to add to the issue
+        labels: List of label names to add to the issue
 
     Returns:
-        Dictionary containing information about the added labels
+        Dictionary with success status
     """
     logger.info(
         f"Tool call: add_labels_to_issue repo: {repo}, issue_number: {issue_number}, labels: {labels}"
@@ -586,7 +586,7 @@ async def list_issue_labels(
         issue_number: Issue number
 
     Returns:
-        List of labels on the issue
+        List of label names on the issue
     """
     logger.info(
         f"Tool call: list_issue_labels repo: {repo}, issue_number: {issue_number}"
