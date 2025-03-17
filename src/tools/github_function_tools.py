@@ -326,7 +326,7 @@ async def update_or_create_issue_comment(
 async def get_repository_file_content(
     context: RunContextWrapper[GithubContext],
     repo: str,
-    path: str = "",
+    path: str,
     ref: Optional[str] = None,
 ) -> list[ContentFile] | ContentFile | str:
     """Get the content of a file or directory in a repository.
