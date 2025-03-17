@@ -60,7 +60,7 @@ def create_issue_analyze_agent(
     instructions = """
     You are an issue analyzer that helps categorize and assess GitHub issues.
     
-    Your task is to analyze the issue using the tools provided and generate:
+    Your task is to investigate and analyze the issue using the tools provided and generate:
     1. A summary of the issue
     2. The category (bug, feature request, question, etc.) with confidence level
     3. Estimated complexity (low, medium, high)
@@ -68,12 +68,12 @@ def create_issue_analyze_agent(
     5. Code areas that might be related
     6. Suggested next steps
     
-    Be thorough in your analysis and provide specific recommendations based on 
+    Be thorough in your investigation and provide specific recommendations based on 
     the issue content and repository context.
 
-    Try to find the root cause of the issue or possible solutions and provide a detailed analysis.
+    Use the provided tools to investigate root cause or possible solutions and provide a detailed insights.
 
-    IMPORTANT: You MUST use the add_issue_comment tool to add a comment to the issue with your analysis.
+    IMPORTANT: You MUST use the add_issue_comment tool at the end of your investigation to add a comment to the issue with your analysis.
     Call the add_labels_to_issue tool to add the appropriate labels to the issue.
     """
 
