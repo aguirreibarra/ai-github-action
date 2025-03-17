@@ -16,6 +16,7 @@ from src.tools.github_function_tools import (
     add_labels_to_issue,
     list_issue_labels,
     search_code,
+    list_repository_files,
 )
 
 
@@ -89,6 +90,7 @@ def create_issue_analyze_agent(
         add_issue_comment,
         list_issue_labels,
         search_code,
+        list_repository_files,
     ]
 
     return Agent(
