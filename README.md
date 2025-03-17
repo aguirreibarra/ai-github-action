@@ -1,17 +1,19 @@
 # AI GitHub Action
 
-> GitHub Actions powered by the AI Agents framework
+> GitHub Actions powered by OpenAI's Agents framework
 
 ## Overview
 
-AI GitHub Action leverages the AI Agents framework to create intelligent GitHub Actions that can analyze pull requests, issues, and code repositories. These actions use OpenAI's API to provide insightful feedback, automated code reviews, and helpful responses to issues.
+AI GitHub Action leverages the OpenAI Agents framework to create intelligent GitHub Actions that can analyze pull requests, issues, and code repositories. These actions use OpenAI's API to provide insightful feedback, automated code reviews, and helpful responses to issues.
 
 ## Features
 
-- Automated PR reviews with code quality feedback, approves PRs automatically when the AI review is favorable
+- Automated PR reviews with code quality feedback and automatic PR approval when appropriate
 - Issue analysis and suggested responses
 - Code scanning for security vulnerabilities and best practices
 - Customizable AI prompts for different contexts
+- Structured outputs for consistent results
+- Tracing with OpenAI agents SDK
 
 ## Usage
 
@@ -33,6 +35,9 @@ on:
 jobs:
   pr-review:
     runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      pull-requests: write
     steps:
       - name: AI PR Review
         uses: aguirreibarra/ai-github-action@main
@@ -42,11 +47,10 @@ jobs:
           github-token: ${{ secrets.GITHUB_TOKEN }}
 ```
 
-The PR Review Action will analyze pull requests and post feedback as a comment. When triggered multiple times on the same PR (e.g., after new commits), it will update its existing comment instead of creating a new one, keeping the PR timeline clean.
+The PR Review Action will analyze pull requests and post feedback as a comment. When triggered multiple times on the same PR (e.g., after new commits), it will update its existing comment instead of creating a new one, keeping the PR timeline clean. This action can also approve PRs when the AI review is favorable.
 
-#### Advanced PR Review Features
+#### Advanced Features
 
-- **Smart File Prioritization**: When a PR contains more files than the `max-files` limit, the action automatically prioritizes files with the most changes
 - **Customizable System Prompt**: Guide the AI's focus towards specific aspects like security, performance, or code style
 
 ### Issue Analyzer Action
@@ -91,9 +95,6 @@ jobs:
 
 ### Code Scanning Action
 
-> **Warning**  
-> This action is currently under construction and may not be fully functional
-
 ```yaml
 name: AI Code Scan
 
@@ -105,6 +106,9 @@ on:
 
 jobs:
   scan:
+    permissions:
+      contents: read
+      issues: write
     runs-on: ubuntu-latest
     steps:
       - name: AI Code Scan
@@ -151,7 +155,7 @@ jobs:
 
 ## Development
 
-This project is based on the [AI Agents framework](https://github.com/aguirreibarra/ai-agents) and adapted for GitHub Actions.
+This project is based on the OpenAI Agents framework and adapted for GitHub Actions.
 
 ### Local Development
 

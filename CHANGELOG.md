@@ -4,6 +4,16 @@ All notable changes to this project will be documented in this file.
 
 ## [Unreleased]
 
+## [2.1.0] - 2025-03-16
+
+### Added
+- Multiple Github Tools for all agents.
+
+### Changed
+- code-scan and issue-analyze actions have access to repository content
+- Improved default instructions.
+- Improved tool documentation for agents reference.
+
 ## [2.0.0] - 2025-03-13
 
 ### Added
