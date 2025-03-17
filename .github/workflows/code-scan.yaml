@@ -1,11 +1,7 @@
-# Example workflow for AI code scanning
-
 name: AI Code Scan
 
 on:
-  schedule:
-    - cron: '0 0 * * 1'  # Run weekly on Mondays
-  workflow_dispatch:  # Allow manual triggering
+  workflow_dispatch:
 
 jobs:
   scan:
@@ -17,4 +13,3 @@ jobs:
           action-type: code-scan
           openai-api-key: ${{ secrets.OPENAI_API_KEY }}
           github-token: ${{ secrets.GITHUB_TOKEN }}
-
