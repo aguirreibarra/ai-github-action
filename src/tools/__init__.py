@@ -12,6 +12,7 @@ from src.tools.github_function_tools import (
     get_repository_info,
     get_repository_file_content,
     list_issue_comments,
+    list_repository_files,
     update_or_create_pr_comment,
     add_labels_to_issue,
     add_issue_comment,
@@ -39,6 +40,7 @@ _TOOL_REGISTRY: dict[str, FunctionTool] = {
     "update_or_create_issue_comment": update_or_create_issue_comment,
     "get_repository_stats": get_repository_stats,
     "create_issue": create_issue,
+    "list_repository_files": list_repository_files,
 }
 
 

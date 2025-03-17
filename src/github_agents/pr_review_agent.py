@@ -14,6 +14,7 @@ from src.tools.github_function_tools import (
     search_code,
     get_pull_request,
     get_pull_request_files,
+    list_repository_files,
 )
 
 
@@ -75,6 +76,7 @@ def create_pr_review_agent(
         get_repository_file_content,
         search_code,
         create_pull_request_review,
+        list_repository_files,
     ]
 
     return Agent(
