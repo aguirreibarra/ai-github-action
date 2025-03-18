@@ -1,9 +1,15 @@
 #!/usr/bin/env python3
 
-import sys
+import asyncio
 import json
 import logging
-import asyncio
+import sys
+
+from agents import gen_trace_id, trace
+
+from src.actions.code_scan import CodeScanAction
+from src.actions.issue_analyze import IssueAnalyzeAction
+from src.actions.pr_review import PRReviewAction
 from src.constants import (
     ACTION_TYPE,
     GITHUB_EVENT_PATH,
@@ -11,11 +17,6 @@ from src.constants import (
     LOG_LEVEL,
     OPENAI_API_KEY,
 )
-from src.actions.pr_review import PRReviewAction
-from src.actions.issue_analyze import IssueAnalyzeAction
-from src.actions.code_scan import CodeScanAction
-
-from agents import gen_trace_id, trace
 
 # Configure logging
 log_level = getattr(logging, LOG_LEVEL, logging.INFO)

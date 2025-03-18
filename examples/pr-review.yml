@@ -5,10 +5,6 @@ name: AI PR Review
 on:
   pull_request:
     types: [opened, synchronize]
-    paths-ignore:
-      - '**.md'
-      - 'docs/**'
-      - '.github/**'
 
 jobs:
   pr-review:

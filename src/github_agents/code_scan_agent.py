@@ -3,16 +3,17 @@ Code Scan agent using OpenAI Agents SDK.
 """
 
 from typing import List, Optional
-from pydantic import BaseModel, Field
+
 from agents import Agent
+from pydantic import BaseModel, Field
 
 from src.tools.github_function_tools import (
     create_issue,
-    get_repository_info,
     get_repository_file_content,
+    get_repository_info,
     get_repository_stats,
-    search_code,
     list_repository_files,
+    search_code,
 )
 
 

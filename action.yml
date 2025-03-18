@@ -1,5 +1,5 @@
 name: 'AI GitHub Action'
-description: 'GitHub Actions powered by the Aguirre Ibarra AI Agents framework'
+description: 'GitHub Actions powered by the OpenAI Agents SDK'
 author: 'Aguirre Ibarra'
 branding:
   icon: 'cpu'

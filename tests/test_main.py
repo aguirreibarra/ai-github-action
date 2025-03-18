@@ -1,7 +1,9 @@
 import json
+from unittest.mock import MagicMock, mock_open, patch
+
 import pytest
-from unittest.mock import patch, mock_open, MagicMock
-from src.main import get_github_event, async_main
+
+from src.main import async_main, get_github_event
 
 
 @pytest.fixture

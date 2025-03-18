@@ -9,8 +9,8 @@ from agents import Runner, custom_span
 from github import Github
 
 from src.constants import CUSTOM_PROMPT, GITHUB_TOKEN, MAX_TURNS, MODEL
-from src.github_agents.issue_analyze_agent import create_issue_analyze_agent
 from src.context.github_context import GithubContext
+from src.github_agents.issue_analyze_agent import create_issue_analyze_agent
 
 logger = logging.getLogger("issue-analyze-action")
 

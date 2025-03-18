@@ -4,18 +4,12 @@ GitHub tools implemented as function tools for OpenAI Agents SDK.
 
 import logging
 from enum import Enum
-from typing import (
-    Any,
-    Dict,
-    List,
-    NotRequired,
-    Optional,
-    TypedDict,
-)
+from typing import Any, Dict, List, NotRequired, Optional, TypedDict
+
 from agents import RunContextWrapper, function_tool
+from github.ContentFile import ContentFile
 
 from src.context.github_context import GithubContext
-from github.ContentFile import ContentFile
 
 logger = logging.getLogger("github-tools")
 

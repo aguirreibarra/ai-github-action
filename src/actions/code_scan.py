@@ -8,12 +8,7 @@ from typing import Any
 from agents import Runner, custom_span
 from github import Github
 
-from src.constants import (
-    CUSTOM_PROMPT,
-    GITHUB_TOKEN,
-    MAX_TURNS,
-    MODEL,
-)
+from src.constants import CUSTOM_PROMPT, GITHUB_TOKEN, MAX_TURNS, MODEL
 from src.context.github_context import GithubContext
 from src.github_agents.code_scan_agent import create_code_scan_agent
 
