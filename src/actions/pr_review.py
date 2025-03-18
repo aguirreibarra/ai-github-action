@@ -4,14 +4,9 @@ from typing import Any
 from agents import Runner, custom_span
 from github import Github
 
-from src.constants import (
-    CUSTOM_PROMPT,
-    GITHUB_TOKEN,
-    MAX_TURNS,
-    MODEL,
-)
-from src.github_agents.pr_review_agent import create_pr_review_agent
+from src.constants import CUSTOM_PROMPT, GITHUB_TOKEN, MAX_TURNS, MODEL
 from src.context.github_context import GithubContext
+from src.github_agents.pr_review_agent import create_pr_review_agent
 
 logger = logging.getLogger("pr-review-action")
 

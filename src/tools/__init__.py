@@ -4,24 +4,25 @@ import json
 from typing import Any
 
 from agents import FunctionTool, RunContextWrapper
+
 from src.context.github_context import GithubContext
 from src.tools.github_function_tools import (
+    add_issue_comment,
+    add_labels_to_issue,
+    create_issue,
     create_pull_request_review,
+    get_issue,
     get_pull_request,
     get_pull_request_files,
-    get_repository_info,
     get_repository_file_content,
-    list_issue_comments,
-    list_repository_files,
-    update_or_create_pr_comment,
-    add_labels_to_issue,
-    add_issue_comment,
-    list_issue_labels,
-    search_code,
-    get_issue,
-    update_or_create_issue_comment,
+    get_repository_info,
     get_repository_stats,
-    create_issue,
+    list_issue_comments,
+    list_issue_labels,
+    list_repository_files,
+    search_code,
+    update_or_create_issue_comment,
+    update_or_create_pr_comment,
 )
 
 _TOOL_REGISTRY: dict[str, FunctionTool] = {

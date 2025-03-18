@@ -2,8 +2,8 @@ import pytest
 from pydantic import ValidationError
 
 from src.github_agents.issue_analyze_agent import (
-    IssueCategory,
     IssueAnalysisResponse,
+    IssueCategory,
     create_issue_analyze_agent,
 )
 

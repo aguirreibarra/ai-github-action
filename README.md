@@ -1,25 +1,30 @@
-# AI GitHub Action
+# AI GitHub Action 🤖
 
-> GitHub Actions powered by OpenAI's Agents framework
+> Supercharge your GitHub workflow with AI-powered automation
 
-## Overview
+[![GitHub stars](https://img.shields.io/github/stars/aguirreibarra/ai-github-action?style=social)](https://github.com/aguirreibarra/ai-github-action/stargazers)
+[![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
+[![Latest Release](https://img.shields.io/github/v/release/aguirreibarra/ai-github-action)](https://github.com/aguirreibarra/ai-github-action/releases)
 
-AI GitHub Action leverages the OpenAI Agents framework to create intelligent GitHub Actions that can analyze pull requests, issues, and code repositories. These actions use OpenAI's API to provide insightful feedback, automated code reviews, and helpful responses to issues.
+## ✨ Overview
 
-## Features
+AI GitHub Action leverages the OpenAI Agents framework to bring intelligent automation to your GitHub workflows. This action can analyze pull requests, issues, and code repositories to provide insightful feedback, automated code reviews, and helpful responses - all powered by OpenAI's advanced AI models.
 
-- Automated PR reviews with code quality feedback and automatic PR approval when appropriate
-- Issue analysis and suggested responses
-- Code scanning for security vulnerabilities and best practices
-- Customizable AI prompts for different contexts
-- Structured outputs for consistent results
-- Tracing with OpenAI agents SDK
+<p align="center">
+  <img src="./docs/assets/tracing.png" alt="AI GitHub Action Demo" width="1200">
+</p>
 
-## Usage
+## 🚀 Key Features
 
-### Pull Request Review Action
+- **Automated PR Reviews** - Get comprehensive code quality feedback with automatic PR approval for high-quality contributions
+- **Issue Analysis** - Receive AI-generated responses to issues with categorization and prioritization
+- **Code Scanning** - Identify security vulnerabilities and best practice violations across your codebase
+- **Custom Instructions** - Tailor the AI behavior to focus on your project's specific needs
+- **Tracing** - Powered by OpenAI's Agent SDK with built-in tracing through the OpenAI platform.
 
-Add this to your workflow file:
+## 📋 Usage Examples
+
+### Pull Request Review
 
 ```yaml
 name: AI PR Review
@@ -27,10 +32,6 @@ name: AI PR Review
 on:
   pull_request:
     types: [opened, synchronize]
-    paths-ignore:
-      - '**.md'
-      - 'docs/**'
-      - '.github/**'
 
 jobs:
   pr-review:
@@ -45,22 +46,19 @@ jobs:
           action-type: pr-review
           openai-api-key: ${{ secrets.OPENAI_API_KEY }}
           github-token: ${{ secrets.GITHUB_TOKEN }}
+          custom-prompt: "Focus on security best practices and performance optimization"
 ```
 
-The PR Review Action will analyze pull requests and post feedback as a comment. When triggered multiple times on the same PR (e.g., after new commits), it will update its existing comment instead of creating a new one, keeping the PR timeline clean. This action can also approve PRs when the AI review is favorable.
+The PR Review Action will analyze pull requests and post feedback by submiting a pull request review. The AI will provide specific feedback directly on code lines.
 
-#### Advanced Features
-
-- **Customizable System Prompt**: Guide the AI's focus towards specific aspects like security, performance, or code style
-
-### Issue Analyzer Action
+### Issue Analyzer
 
 ```yaml
 name: AI Issue Analysis
 
 on:
   issues:
-    types: [opened]
+    types: [opened, labeled]
 
 jobs:
   analyze:
@@ -93,7 +91,7 @@ jobs:
             }
 ```
 
-### Code Scanning Action
+### Code Scanning
 
 ```yaml
 name: AI Code Scan
@@ -103,6 +101,7 @@ on:
     branches: [main]
   schedule:
     - cron: '0 0 * * 1'  # Weekly scan
+  workflow_dispatch: # Allow manual runs
 
 jobs:
   scan:
@@ -119,7 +118,7 @@ jobs:
           github-token: ${{ secrets.GITHUB_TOKEN }}
 ```
 
-## Configuration
+## ⚙️ Configuration Options
 
 | Input | Description | Required | Default |
 |-------|-------------|----------|---------|
@@ -130,54 +129,27 @@ jobs:
 | `max-turns` | Maximum turns for the AI | No | 30 |
 | `custom-prompt` | Custom system prompt for the AI | No | - |
 
-## Debugging with LOG_LEVEL
+## 🔍 Debugging with LOG_LEVEL
 
-You can control the verbosity of logs by setting the `LOG_LEVEL` environment variable in your workflow:
+Control the verbosity of logs by setting the `LOG_LEVEL` environment variable:
 
 ```yaml
-jobs:
-  review:
-    runs-on: ubuntu-latest
-    steps:
-      - name: AI PR Review
-        uses: aguirreibarra/ai-github-action@main
-        with:
-          action-type: pr-review
-          openai-api-key: ${{ secrets.OPENAI_API_KEY }}
-          github-token: ${{ secrets.GITHUB_TOKEN }}
-        env:
-          LOG_LEVEL: DEBUG  # Set to DEBUG, INFO, WARNING, ERROR, or CRITICAL
+steps:
+  - name: AI PR Review
+    uses: aguirreibarra/ai-github-action@main
+    with:
+      action-type: pr-review
+      openai-api-key: ${{ secrets.OPENAI_API_KEY }}
+      github-token: ${{ secrets.GITHUB_TOKEN }}
+    env:
+      LOG_LEVEL: DEBUG  # Options: DEBUG, INFO, WARNING, ERROR, CRITICAL
 ```
 
-- Use `DEBUG` for maximum verbosity when troubleshooting issues
-- Use `INFO` for normal operations (default)
-- Use `WARNING` or `ERROR` to reduce log output in production environments
 
-## Development
+## 🤝 Contributing
 
-This project is based on the OpenAI Agents framework and adapted for GitHub Actions.
+We welcome contributions! See [CONTRIBUTING.md](CONTRIBUTING.md) for guidelines.
 
-### Local Development
-
-```bash
-# Clone the repository
-git clone https://github.com/aguirreibarra/ai-github-action.git
-cd ai-github-action
-
-# Install Poetry if you don't have it
-# pip install poetry
-
-# Install dependencies using Poetry
-poetry install
-
-# Activate the virtual environment
-poetry shell
-```
-
-## Contributing
-
-See [CONTRIBUTING.md](CONTRIBUTING.md) for contribution guidelines.
-
-## License
+## 📜 License
 
 [MIT License](LICENSE)

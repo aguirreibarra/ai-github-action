@@ -1,12 +1,13 @@
+from unittest.mock import AsyncMock, MagicMock, patch
+
 import pytest
-from unittest.mock import patch, MagicMock, AsyncMock
 from pydantic import ValidationError
 
 from src.actions.code_scan import CodeScanAction
 from src.github_agents.code_scan_agent import (
-    create_code_scan_agent,
-    CodeScanResponse,
     CodeIssue,
+    CodeScanResponse,
+    create_code_scan_agent,
 )
 
 

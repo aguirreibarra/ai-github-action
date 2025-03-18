@@ -1,5 +1,6 @@
-import pytest
 from importlib import reload
+
+import pytest
 
 
 # Test constants with environment variables set

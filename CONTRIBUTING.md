@@ -1,115 +1,150 @@
-# Contributing to AI GitHub Action
+# Contributing to AI GitHub Action 🤖
 
-Thank you for your interest in contributing to this project!
+Thank you for your interest in contributing to AI GitHub Action! This document provides guidelines and instructions to help you get started.
 
-## Code of Conduct
+## 🚀 Getting Started
 
-Please be respectful and considerate of others when contributing to this project.
+1. **Fork the repository**
+2. **Clone your fork**
+   ```bash
+   git clone https://github.com/YOUR-USERNAME/ai-github-action.git
+   cd ai-github-action
+   ```
+3. **Create a feature branch**
+   ```bash
+   git checkout -b feature/your-feature-name
+   ```
+4. **Make your changes**
+5. **Test your changes**
+6. **Commit with clear messages**
+7. **Push to your fork**
+   ```bash
+   git push origin feature/your-feature-name
+   ```
+8. **Create a pull request**
 
-## Getting Started
+## 🛠️ Development Environment
 
-1. Fork the repository
-2. Clone your fork: `git clone https://github.com/YOUR-USERNAME/ai-github-action.git`
-3. Create a new branch for your feature/fix: `git checkout -b feature-name`
-4. Make your changes
-5. Test your changes
-6. Commit your changes with descriptive commit messages
-7. Push to your fork: `git push origin feature-name`
-8. Create a pull request
-
-## Development Environment
+We use Poetry for dependency management:
 
 ```bash
-# Ensure Poetry is installed
-# pip install poetry
+# Install Poetry if not already installed
+# curl -sSL https://install.python-poetry.org | python3 -
 
-# Install all dependencies (including dev dependencies)
+# Install dependencies
 poetry install
 
-# Activate the virtual environment
+# Activate virtual environment
 poetry shell
 
-# Run a command within the environment without activating
+# Run commands within the environment without activating
 poetry run pytest
 ```
 
-## Testing
+## 🧪 Testing
 
 We use pytest for testing:
 
 ```bash
 # Run all tests
 poetry run pytest
+
+# Run specific tests
+poetry run pytest tests/test_pr_review.py
+
+# Run tests with coverage report
+poetry run pytest --cov=src
 ```
 
-## Adapting from AI Agents
+## 📝 Code Style
 
-This project adapts core functionality from the AI Agents framework. If you're familiar with the AI Agents project, here are the key differences:
+We follow these style guidelines:
 
-1. **Interface**: Instead of Telegram, we use GitHub API
-2. **Tools**: GitHub-specific tools instead of general-purpose tools
-3. **Actions**: Three main actions (PR review, issue analysis, code scan)
-4. **Context**: GitHub event-driven context instead of chat-based
+- **PEP 8** for Python code style
+- **Type hints** for all function signatures
+- **Docstrings** for all public functions and classes
+- **Black** for code formatting
+- **isort** for import sorting
 
-## Repository Structure
+Run code quality checks:
 
-- `actions/`: Contains different GitHub Action implementations
-- `tools/`: GitHub-specific tool implementations
-- `tests/`: Test suite
-- `.github/workflows/`: CI/CD workflows
-
-## Style Guidelines
-
-- We follow PEP 8 for Python code style
-- Use type hints where possible
-- Document functions and classes with docstrings
-
-## Pull Request Process
-
-1. Ensure your code passes all tests
-2. Update the documentation if needed
-3. Make sure your code is well-tested
-4. Create a pull request with a clear description
-5. Address any feedback from reviewers
-
-## Testing GitHub Actions Locally
-
-To test GitHub Actions locally:
-
-1. Set up required environment variables:
 ```bash
-export GITHUB_TOKEN=your_token
-export OPENAI_API_KEY=your_key
+# Format code
+poetry run black src tests
+
+# Sort imports
+poetry run isort src tests
+
+# Check typing
+poetry run mypy src
 ```
 
-2. Create a test event JSON file (e.g., `event.json`):
-```json
-{
-  "repository": {
-    "full_name": "owner/repo"
-  },
-  "pull_request": {
-    "number": 123
-  }
-}
+## 🏗️ Project Structure
+
+```
+ai-github-action/
+├── src/                  # Source code
+│   ├── actions/          # GitHub Action implementations
+│   ├── github_agents/    # AI agent implementations
+│   ├── context/          # GitHub context handling
+│   ├── tools/            # Tools for agents
+│   └── main.py           # Entry point
+├── tests/                # Test suite
+├── examples/             # Example workflows
+└── docs/                 # Documentation
 ```
 
-3. Run the action directly:
-```bash
-export GITHUB_EVENT_PATH=./event.json
-python main.py
-```
+## 🔄 GitHub Actions Integration
 
-## Extending with New Actions
+This project is designed as a GitHub Action. When making changes, consider:
 
-To add a new action type:
+- **Action inputs** defined in `action.yml`
+- **Docker execution** environment
+- **GitHub API** interactions
+- **Permissions** required for different operations
 
-1. Create a new class in the `actions/` directory
-2. Implement the `run()` method
-3. Update the `main.py` file to handle the new action type
-4. Add tests for the new action
-5. Update documentation
+## 🧠 AI Integration
 
-## License
+When working with the AI components:
 
-By contributing, you agree that your contributions will be licensed under the project's MIT License.
+- Keep prompt engineering clear and focused
+- Consider token usage and model limitations
+- Test with different types of inputs
+- Document any model-specific behavior
+
+## 🚀 Adding New Features
+
+### Adding a New Action Type
+
+1. Create a new Python module in `src/actions/`
+2. Implement the corresponding agent in `src/github_agents/`
+3. Add any necessary tools in `src/tools/`
+4. Update `main.py` to handle the new action type
+5. Add tests for the new functionality
+6. Update documentation and example workflows
+7. Add an example workflow file in `examples/`
+
+### Enhancing Existing Actions
+
+1. Identify the relevant files in `src/actions/` and `src/github_agents/`
+2. Make your enhancements with appropriate tests
+3. Update the documentation to reflect the changes
+
+## 📊 Release Process
+
+1. Update the version in `pyproject.toml`
+2. Update `CHANGELOG.md` with the new version and changes
+3. Create a pull request for the release
+4. Once merged, create a new release on GitHub with appropriate tags
+
+## 🙏 Code of Conduct
+
+Please be respectful and considerate of others when contributing to this project. We aim to foster an inclusive and welcoming community.
+
+## 📜 License
+
+By contributing, you agree that your contributions will be licensed under the project's [MIT License](LICENSE).
+
+---
+
+If you have any questions, feel free to open an issue or start a discussion. Happy coding! 🎉
