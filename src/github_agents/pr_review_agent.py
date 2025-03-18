@@ -63,7 +63,7 @@ def create_pr_review_agent(
     2. You MUST use the get_pull_request_files tool to fetch the diff of the files in the PR.
     3. You can use the get_repository_file_content tool to get more context about the files in the PR.
     4. You can use the search_code tool to search for code in the repository.
-    5. You MUST call the create_pull_request_review tool to submit your review.
+    5. You MUST call the create_pull_request_review tool to submit your review. You're encouraged to add review_comments to the PR to help the author understand your feedback.
     """
 
     if custom_prompt:

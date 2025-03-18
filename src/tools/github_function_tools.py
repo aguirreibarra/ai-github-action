@@ -8,13 +8,14 @@ from typing import (
     Any,
     Dict,
     List,
+    NotRequired,
     Optional,
+    TypedDict,
 )
 from agents import RunContextWrapper, function_tool
 
 from src.context.github_context import GithubContext
 from github.ContentFile import ContentFile
-from github.PullRequest import ReviewComment
 
 logger = logging.getLogger("github-tools")
 
@@ -561,6 +562,13 @@ class PRReviewEvent(Enum):
     COMMENT = "COMMENT"
 
 
+class ReviewComment(TypedDict):
+    path: str
+    body: str
+    line: NotRequired[int]
+    side: NotRequired[str]
+
+
 @function_tool
 async def create_pull_request_review(
     context: RunContextWrapper[GithubContext],
@@ -586,6 +594,11 @@ async def create_pull_request_review(
             - COMMENT: Leaves feedback without explicit approval/rejection (default)
         review_comments: Optional list of ReviewComment objects for inline code comments.
             These appear as comments on specific lines in the PR diff.
+            Each ReviewComment object contains:
+                - path: The path to the file being commented on
+                - body: The comment text
+                - line: The line number of the comment (must be part of the diff)
+                - side: The side of the diff that the comment applies to (LEFT, RIGHT, or SIDE)
 
     Returns:
         Dictionary with review details including:
