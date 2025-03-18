@@ -14,6 +14,7 @@ from agents import RunContextWrapper, function_tool
 
 from src.context.github_context import GithubContext
 from github.ContentFile import ContentFile
+from github.PullRequest import ReviewComment
 
 logger = logging.getLogger("github-tools")
 
@@ -567,17 +568,30 @@ async def create_pull_request_review(
     pr_number: int,
     body: str,
     event: PRReviewEvent = PRReviewEvent.COMMENT,
+    review_comments: list[ReviewComment] | None = None,
 ) -> dict[str, Any]:
-    """Create a review for a pull request.
+    """Create a review for a pull request with optional inline comments.
+
+    This function allows you to submit a formal review on a PR with different approval states.
+    Use this instead of simple comments when you want to approve, request changes, or provide
+    a more structured review with inline comments on specific code sections.
 
     Args:
         repo: Repository name with owner (e.g., 'owner/repo')
         pr_number: Pull request number
-        body: Review comment content, supports Markdown
-        event: Review event type (APPROVE, REQUEST_CHANGES, or COMMENT)
+        body: Overall review comment content, supports Markdown. This appears at the top of the review.
+        event: Review event type that determines the review action:
+            - APPROVE: Approves the PR and allows merging
+            - REQUEST_CHANGES: Indicates required changes before the PR can be merged
+            - COMMENT: Leaves feedback without explicit approval/rejection (default)
+        review_comments: Optional list of ReviewComment objects for inline code comments.
+            These appear as comments on specific lines in the PR diff.
 
     Returns:
-        Dictionary with review details including id, state, body, and submission time
+        Dictionary with review details including:
+            - id: Unique identifier for the review
+            - state: Current state of the review
+            - submitted_at: Timestamp when the review was submitted (ISO format)
     """
     logger.info(
         f"Tool call: create_pull_request_review repo: {repo}, pr_number: {pr_number}, body: {body}, event: {event}"
@@ -586,12 +600,16 @@ async def create_pull_request_review(
     pr = repo_obj.get_pull(pr_number)
 
     review_body = body
-    review = pr.create_review(body=review_body, event=event.value)
+    if review_comments is None:
+        review = pr.create_review(body=review_body, event=event.value)
+    else:
+        review = pr.create_review(
+            body=review_body, event=event.value, comments=review_comments
+        )
 
     return {
         "id": review.id,
         "state": review.state,
-        "body": review.body,
         "submitted_at": (
             review.submitted_at.isoformat() if review.submitted_at else None
         ),
