@@ -598,7 +598,7 @@ async def create_pull_request_review(
                 - path: The path to the file being commented on
                 - body: The comment text
                 - line: The line number of the comment (must be part of the diff)
-                - side: The side of the diff that the comment applies to (LEFT, RIGHT, or SIDE)
+                - side: When a review comment is attached to a diff, it must refer to a specific line in either the base ("LEFT") or the modified ("RIGHT")
 
     Returns:
         Dictionary with review details including:
