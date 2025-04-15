@@ -25,20 +25,12 @@ Thank you for your interest in contributing to AI GitHub Action! This document p
 
 ## 🛠️ Development Environment
 
-We use Poetry for dependency management:
+We use uv for dependency management with pyproject.toml:
 
 ```bash
-# Install Poetry if not already installed
-# curl -sSL https://install.python-poetry.org | python3 -
+# Install uv if not already installed
+# curl -LsSf https://astral.sh/uv/install.sh | sh
 
-# Install dependencies
-poetry install
-
-# Activate virtual environment
-poetry shell
-
-# Run commands within the environment without activating
-poetry run pytest
 ```
 
 ## 🧪 Testing
@@ -47,13 +39,13 @@ We use pytest for testing:
 
 ```bash
 # Run all tests
-poetry run pytest
+make test
 
 # Run specific tests
-poetry run pytest tests/test_pr_review.py
+uv run pytest tests/test_pr_review.py
 
 # Run tests with coverage report
-poetry run pytest --cov=src
+uv run pytest --cov=src
 ```
 
 ## 📝 Code Style
@@ -70,13 +62,13 @@ Run code quality checks:
 
 ```bash
 # Format code
-poetry run black src tests
+black src tests
 
 # Sort imports
-poetry run isort src tests
+isort src tests
 
 # Check typing
-poetry run mypy src
+make mypy
 ```
 
 ## 🏗️ Project Structure

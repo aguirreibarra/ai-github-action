@@ -1,7 +1,20 @@
+.PHONY: sync
+sync:
+	uv sync --all-extras --all-packages --group dev
+
+.PHONY: format
+format: 
+	uv run ruff format
+	uv run ruff check --fix
+
+.PHONY: lint
+lint: 
+	uv run ruff check
+
 .PHONY: mypy
 mypy: 
-	poetry run mypy src tests
+	uv run mypy src tests
 
 .PHONY: tests
-test:
-	poetry run pytest tests
+tests: 
+	uv run pytest 
