@@ -1,41 +1,30 @@
-FROM python:3.12-slim
+# Use a Python image with uv pre-installed
+FROM ghcr.io/astral-sh/uv:python3.12-bookworm-slim
 
 WORKDIR /app
 
-# Install necessary dependencies
-RUN apt-get update && \
-    apt-get install -y --no-install-recommends git ca-certificates curl && \
-    apt-get clean && \
-    rm -rf /var/lib/apt/lists/*
+# Enable bytecode compilation and set link mode for uv
+ENV UV_COMPILE_BYTECODE=1
+ENV UV_LINK_MODE=copy
 
-# Install Poetry with recommended method
-ENV POETRY_VERSION=2.1.1
-ENV POETRY_HOME=/opt/poetry
-ENV POETRY_VENV=/opt/poetry-venv
-ENV POETRY_CACHE_DIR=/opt/.cache
+# Install dependencies using uv and the lockfile
+RUN --mount=type=cache,target=/root/.cache/uv \
+    --mount=type=bind,source=uv.lock,target=uv.lock \
+    --mount=type=bind,source=pyproject.toml,target=pyproject.toml \
+    uv sync --frozen --no-install-project --no-dev
 
-# Install poetry separated from system python
-RUN python3 -m venv $POETRY_VENV \
-    && $POETRY_VENV/bin/pip install -U pip setuptools \
-    && $POETRY_VENV/bin/pip install poetry==$POETRY_VERSION
+# Copy the rest of the project source code
+ADD . /app
 
-# Add poetry to PATH
-ENV PATH="${PATH}:${POETRY_VENV}/bin"
+# Install the project itself (editable mode, no dev deps)
+RUN --mount=type=cache,target=/root/.cache/uv \
+    uv sync --frozen --no-dev
 
-# Configure poetry
-RUN poetry config virtualenvs.create false
-
-# Copy Poetry configuration files
-COPY pyproject.toml poetry.lock* ./
-
-# Install runtime dependencies
-RUN poetry install --without dev --no-interaction --no-ansi
-
-# Copy the action code
-COPY . .
-
-# Add the app directory to PYTHONPATH to make imports work
+# Add the app directory to PYTHONPATH for imports
 ENV PYTHONPATH="/app:${PYTHONPATH}"
 
-# Set the entrypoint
+# Place executables in the environment at the front of the path
+ENV PATH="/app/.venv/bin:$PATH"
+
+# Set the entrypoint to run your main script
 ENTRYPOINT ["python", "/app/src/main.py"]
