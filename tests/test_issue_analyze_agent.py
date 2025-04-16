@@ -1,6 +1,3 @@
-import pytest
-from pydantic import ValidationError
-
 from src.github_agents.issue_analyze_agent import (
     IssueAnalysisResponse,
     IssueCategory,
@@ -23,7 +20,8 @@ def test_issue_category_model():
     assert category3.name == "question"
     assert category3.confidence == 1.0
 
-    # Test with confidence values outside the described range (should still work after removing ge/le constraints)
+    # Test with confidence values outside the described range
+    # (should still work after removing ge/le constraints)
     category4 = IssueCategory(name="invalid", confidence=1.5)
     assert category4.name == "invalid"
     assert category4.confidence == 1.5

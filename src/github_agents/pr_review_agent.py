@@ -2,9 +2,7 @@
 PR Review agent using OpenAI Agents SDK.
 """
 
-from typing import List, Optional
-
-from agents import Agent
+from agents import Agent, ComputerTool, FileSearchTool, FunctionTool, WebSearchTool
 from pydantic import BaseModel, Field
 
 from src.tools.github_function_tools import (
@@ -24,8 +22,8 @@ class PRReviewResponse(BaseModel):
 
     summary: str = Field(description="A summary of the changes in the PR")
     code_quality: str = Field(description="Assessment of code quality")
-    issues: List[str] = Field(description="List of potential issues or bugs found")
-    suggestions: List[str] = Field(description="List of suggestions for improvement")
+    issues: list[str] = Field(description="List of potential issues or bugs found")
+    suggestions: list[str] = Field(description="List of suggestions for improvement")
     assessment: str = Field(description="Overall assessment (approve, request changes, comment)")
     review_event: PRReviewEvent = Field(
         description="The review event type to use for the PR review"
@@ -33,7 +31,7 @@ class PRReviewResponse(BaseModel):
 
 
 def create_pr_review_agent(
-    model: str = "gpt-4o-mini", custom_prompt: Optional[str] = None
+    model: str = "gpt-4o-mini", custom_prompt: str | None = None
 ) -> Agent[PRReviewResponse]:
     """Create a PR Review agent with PR-specific tools.
 
@@ -48,7 +46,9 @@ def create_pr_review_agent(
     instructions = """
     You are a reviewer who helps analyze GitHub pull requests.
 
-    Your task is to use the tools provided to review the PR files, analyze the code changes, and provide:
+    Your task is to use the tools provided to review the PR files,
+    analyze the code changes, and provide:
+
     1. A summary of the changes
     2. Code quality assessment
     3. Potential issues or bugs
@@ -60,15 +60,16 @@ def create_pr_review_agent(
     IMPORTANT (Follow these steps in order):
     1. You MUST use the get_pull_request tool to get information about the PR.
     2. You MUST use the get_pull_request_files tool to fetch the diff of the files in the PR.
-    3. You can use the get_repository_file_content tool to get more context about the files in the PR.
-    4. You can use the search_code tool to search for code in the repository.
-    5. You MUST call the create_pull_request_review tool to submit your review. You're encouraged to add review_comments to the PR to help the author understand your feedback.
+    3. Use the get_repository_file_content tool to get more context about the files in the PR.
+    4. Use the search_code tool to search for code in the repository.
+    5. You MUST call the create_pull_request_review tool to submit your review.
+    You're encouraged to add review_comments to the PR to help the author understand your feedback.
     """
 
     if custom_prompt:
         instructions = custom_prompt
 
-    tools = [
+    tools: list[FunctionTool | FileSearchTool | WebSearchTool | ComputerTool] = [
         get_pull_request,
         get_pull_request_files,
         get_repository_info,

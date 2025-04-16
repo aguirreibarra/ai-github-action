@@ -36,7 +36,7 @@ def get_github_event():
         logger.error("GITHUB_EVENT_PATH environment variable not set")
         sys.exit(1)
 
-    with open(GITHUB_EVENT_PATH, "r") as f:
+    with open(GITHUB_EVENT_PATH) as f:
         return json.load(f)
 
 
@@ -80,7 +80,7 @@ async def async_main():
             logger.info("Action completed successfully")
 
         except Exception as e:
-            logger.error(f"Error running action: {str(e)}", exc_info=True)
+            logger.error(f"Error running action: {e!s}", exc_info=True)
             sys.exit(1)
 
 

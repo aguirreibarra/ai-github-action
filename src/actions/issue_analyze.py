@@ -66,7 +66,7 @@ class IssueAnalyzeAction:
 
             except Exception as e:
                 logger.critical(
-                    f"Unhandled exception in issue analysis action: {str(e)}",
+                    f"Unhandled exception in issue analysis action: {e!s}",
                     exc_info=True,
                 )
                 raise

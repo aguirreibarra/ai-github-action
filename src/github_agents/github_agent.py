@@ -2,9 +2,7 @@
 Base GitHub agent using OpenAI Agents SDK.
 """
 
-from typing import Optional
-
-from agents import Agent
+from agents import Agent, ComputerTool, FileSearchTool, FunctionTool, WebSearchTool
 from pydantic import BaseModel, Field
 
 from src.tools.github_function_tools import (
@@ -19,10 +17,10 @@ class GitHubResponse(BaseModel):
     """Response model for GitHub agent."""
 
     analysis: str = Field(description="The analysis or response text")
-    summary: Optional[str] = Field(default=None, description="An optional summary of the response")
+    summary: str | None = Field(default=None, description="An optional summary of the response")
 
 
-def create_github_agent(model: str = "gpt-4o-mini", custom_prompt: Optional[str] = None) -> Agent:
+def create_github_agent(model: str = "gpt-4o-mini", custom_prompt: str | None = None) -> Agent:
     """Create a base GitHub agent with common tools.
 
     Args:
@@ -43,7 +41,7 @@ def create_github_agent(model: str = "gpt-4o-mini", custom_prompt: Optional[str]
     if custom_prompt:
         instructions = custom_prompt
 
-    tools = [
+    tools: list[FunctionTool | FileSearchTool | WebSearchTool | ComputerTool] = [
         get_repository_info,
         get_repository_file_content,
         get_repository_stats,
