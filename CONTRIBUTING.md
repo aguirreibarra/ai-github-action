@@ -50,24 +50,26 @@ uv run pytest --cov=src
 
 ## 📝 Code Style
 
-We follow these style guidelines:
+We use the following tools to ensure code quality:
 
-- **PEP 8** for Python code style
-- **Type hints** for all function signatures
-- **Docstrings** for all public functions and classes
-- **Black** for code formatting
-- **isort** for import sorting
+- **Ruff** for code formatting and linting
+- **mypy** for static type checking
 
-Run code quality checks:
+To format your code:
 
 ```bash
-# Format code
-black src tests
+make format
+```
 
-# Sort imports
-isort src tests
+To lint your code for issues:
 
-# Check typing
+```bash
+make lint
+```
+
+To check types:
+
+```bash
 make mypy
 ```
 

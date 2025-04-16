@@ -19,14 +19,10 @@ class GitHubResponse(BaseModel):
     """Response model for GitHub agent."""
 
     analysis: str = Field(description="The analysis or response text")
-    summary: Optional[str] = Field(
-        default=None, description="An optional summary of the response"
-    )
+    summary: Optional[str] = Field(default=None, description="An optional summary of the response")
 
 
-def create_github_agent(
-    model: str = "gpt-4o-mini", custom_prompt: Optional[str] = None
-) -> Agent:
+def create_github_agent(model: str = "gpt-4o-mini", custom_prompt: Optional[str] = None) -> Agent:
     """Create a base GitHub agent with common tools.
 
     Args:

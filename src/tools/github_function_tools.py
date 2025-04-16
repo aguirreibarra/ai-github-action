@@ -18,7 +18,7 @@ logger = logging.getLogger("github-tools")
 @function_tool
 async def get_pull_request(
     context: RunContextWrapper[GithubContext], repo: str, pr_number: int
-) -> Dict[str, Any]:
+) -> dict[str, Any]:
     """Get detailed information about a pull request.
 
     Args:
@@ -60,20 +60,14 @@ async def get_pull_request(
         "draft": pr.draft if hasattr(pr, "draft") else False,
         "milestone": pr.milestone.title if pr.milestone else None,
         "assignees": (
-            [assignee.login for assignee in pr.assignees]
-            if hasattr(pr, "assignees")
-            else []
+            [assignee.login for assignee in pr.assignees] if hasattr(pr, "assignees") else []
         ),
         "review_comments": pr.review_comments,
         "maintainer_can_modify": (
             pr.maintainer_can_modify if hasattr(pr, "maintainer_can_modify") else None
         ),
-        "mergeable_state": (
-            pr.mergeable_state if hasattr(pr, "mergeable_state") else None
-        ),
-        "merge_commit_sha": (
-            pr.merge_commit_sha if hasattr(pr, "merge_commit_sha") else None
-        ),
+        "mergeable_state": (pr.mergeable_state if hasattr(pr, "mergeable_state") else None),
+        "merge_commit_sha": (pr.merge_commit_sha if hasattr(pr, "merge_commit_sha") else None),
         "closed_at": pr.closed_at.isoformat() if pr.closed_at else None,
         "merged_at": pr.merged_at.isoformat() if pr.merged_at else None,
         "merged_by": pr.merged_by.login if pr.merged_by else None,
@@ -94,9 +88,7 @@ async def get_pull_request_files(
     Returns:
         List of dictionaries with file details including filename, status, changes, etc.
     """
-    logger.info(
-        f"Tool call: get_pull_request_files repo: {repo}, pr_number: {pr_number}"
-    )
+    logger.info(f"Tool call: get_pull_request_files repo: {repo}, pr_number: {pr_number}")
     repo_obj = context.context.github_client.get_repo(repo)
     pr = repo_obj.get_pull(pr_number)
 
@@ -113,9 +105,7 @@ async def get_pull_request_files(
                 "raw_url": file.raw_url,
                 "patch": file.patch if hasattr(file, "patch") else None,
                 "previous_filename": (
-                    file.previous_filename
-                    if hasattr(file, "previous_filename")
-                    else None
+                    file.previous_filename if hasattr(file, "previous_filename") else None
                 ),
                 "sha": file.sha if hasattr(file, "sha") else None,
             }
@@ -232,9 +222,7 @@ async def get_issue(
         "created_at": issue.created_at.isoformat(),
         "updated_at": issue.updated_at.isoformat(),
         "comments": issue.comments,
-        "labels": [
-            {"name": label.name, "color": label.color} for label in issue.labels
-        ],
+        "labels": [{"name": label.name, "color": label.color} for label in issue.labels],
         "assignees": [assignee.login for assignee in issue.assignees],
     }
 
@@ -335,9 +323,7 @@ async def get_repository_file_content(
     Returns:
         Dictionary with the content of the file/directory
     """
-    logger.info(
-        f"Tool call: get_repository_file_content repo: {repo}, path: {path}, ref: {ref}"
-    )
+    logger.info(f"Tool call: get_repository_file_content repo: {repo}, path: {path}, ref: {ref}")
     repo_obj = context.context.github_client.get_repo(repo)
     try:
         if ref is None:
@@ -610,16 +596,12 @@ async def create_pull_request_review(
     if review_comments is None:
         review = pr.create_review(body=review_body, event=event.value)
     else:
-        review = pr.create_review(
-            body=review_body, event=event.value, comments=review_comments
-        )
+        review = pr.create_review(body=review_body, event=event.value, comments=review_comments)
 
     return {
         "id": review.id,
         "state": review.state,
-        "submitted_at": (
-            review.submitted_at.isoformat() if review.submitted_at else None
-        ),
+        "submitted_at": (review.submitted_at.isoformat() if review.submitted_at else None),
     }
 
 
@@ -638,9 +620,7 @@ async def list_issue_comments(
     Returns:
         List of dictionaries with comment details including id, body, user, and timestamps
     """
-    logger.info(
-        f"Tool call: list_issue_comments repo: {repo}, issue_number: {issue_number}"
-    )
+    logger.info(f"Tool call: list_issue_comments repo: {repo}, issue_number: {issue_number}")
     repo_obj = context.context.github_client.get_repo(repo)
     issue = repo_obj.get_issue(issue_number)
     comments = issue.get_comments()
@@ -698,9 +678,7 @@ async def list_issue_labels(
     Returns:
         List of label names on the issue
     """
-    logger.info(
-        f"Tool call: list_issue_labels repo: {repo}, issue_number: {issue_number}"
-    )
+    logger.info(f"Tool call: list_issue_labels repo: {repo}, issue_number: {issue_number}")
     repo_obj = context.context.github_client.get_repo(repo)
     issue = repo_obj.get_issue(issue_number)
     return [label.name for label in issue.labels]

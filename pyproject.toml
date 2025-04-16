@@ -18,26 +18,55 @@ classifiers = [
     "License :: OSI Approved :: MIT License"
 ]
 dependencies = [
-    "openai==1.66.2",
-    "requests==2.32.3",
     "PyGithub==2.6.1",
-    "GitPython==3.1.44",
-    "PyYAML==6.0.2",
     "pydantic==2.10.6",
-    "glob2==0.7",
-    "openai-agents==0.0.4",
+    "openai-agents==0.0.11",
 ]
 
 [dependency-groups]
 dev = [
     "pytest==7.4.4",
-    "black==23.12.1",
-    "isort==5.13.2",
+    "ruff==0.11.5",
     "mypy==1.15.0",
-    "flake8==7.1.2",
     "pytest-cov==4.1.0",
     "pytest-asyncio==0.23.5",
 ]
 
 [tool.pytest.ini_options]
-asyncio_mode = "auto" 
+asyncio_mode = "auto"
+
+[tool.ruff]
+line-length = 100
+target-version = "py312"
+
+[tool.ruff.lint]
+select = [
+    "E",  # pycodestyle errors
+    "F",  # pyflakes
+    "I",  # isort
+    "UP", # pyupgrade
+    "C",  # flake8-comprehensions
+    "B",  # flake8-bugbear
+    "A",  # flake8-builtins
+    "T20", # flake8-print
+    "RUF", # Ruff-specific rules
+]
+exclude = [
+    ".git",
+    ".mypy_cache",
+    ".ruff_cache",
+    ".venv",
+    "__pycache__",
+    "dist",
+]
+
+[tool.ruff.format]
+# Use double quotes for strings
+quote-style = "double"
+# Indent with spaces
+indent-style = "space"
+# Format docstrings
+docstring-code-format = true
+
+[tool.ruff.lint.isort]
+known-first-party = ["src"] 

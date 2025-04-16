@@ -37,12 +37,8 @@ class IssueAnalysisResponse(BaseModel):
     )
     complexity: str = Field(description="Estimated complexity (low, medium, high)")
     priority: str = Field(description="Suggested priority (low, medium, high)")
-    related_areas: List[str] = Field(
-        description="Code areas that might be related to this issue"
-    )
-    next_steps: List[str] = Field(
-        description="Suggested next steps to resolve the issue"
-    )
+    related_areas: List[str] = Field(description="Code areas that might be related to this issue")
+    next_steps: List[str] = Field(description="Suggested next steps to resolve the issue")
 
 
 def create_issue_analyze_agent(

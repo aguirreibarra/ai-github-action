@@ -74,14 +74,10 @@ def test_code_issue_validation():
     """Test CodeIssue validation."""
     # Test missing required fields
     with pytest.raises(ValidationError):
-        CodeIssue(
-            severity="high", description="Missing file", suggestion="Test suggestion"
-        )
+        CodeIssue(severity="high", description="Missing file", suggestion="Test suggestion")
 
     with pytest.raises(ValidationError):
-        CodeIssue(
-            file="test.py", description="Missing severity", suggestion="Test suggestion"
-        )
+        CodeIssue(file="test.py", description="Missing severity", suggestion="Test suggestion")
 
     with pytest.raises(ValidationError):
         CodeIssue(file="test.py", severity="high", suggestion="Missing description")
