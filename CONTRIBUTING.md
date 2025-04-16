@@ -39,7 +39,7 @@ We use pytest for testing:
 
 ```bash
 # Run all tests
-make test
+make tests
 
 # Run specific tests
 uv run pytest tests/test_pr_review.py
