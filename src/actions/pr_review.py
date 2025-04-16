@@ -57,7 +57,5 @@ class PRReviewAction:
                     logger.info(f"agent response: {final_output}")
 
             except Exception as e:
-                logger.critical(
-                    f"Unhandled exception in PR review action: {str(e)}", exc_info=True
-                )
+                logger.critical(f"Unhandled exception in PR review action: {str(e)}", exc_info=True)
                 raise

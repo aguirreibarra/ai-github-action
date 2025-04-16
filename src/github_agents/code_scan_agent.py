@@ -21,12 +21,8 @@ class CodeIssue(BaseModel):
     """Code issue found during scanning."""
 
     file: str = Field(description="File path where the issue was found")
-    line: Optional[int] = Field(
-        description="Line number where the issue was found", default=None
-    )
-    severity: str = Field(
-        description="Severity of the issue (critical, high, medium, low)"
-    )
+    line: Optional[int] = Field(description="Line number where the issue was found", default=None)
+    severity: str = Field(description="Severity of the issue (critical, high, medium, low)")
     description: str = Field(description="Description of the issue")
     suggestion: str = Field(description="Suggestion for fixing the issue")
 
@@ -37,9 +33,7 @@ class CodeScanResponse(BaseModel):
     overview: str = Field(description="Overview of the code scan results")
     issues: List[CodeIssue] = Field(description="List of issues found")
     good_practices: List[str] = Field(description="Good practices observed in the code")
-    recommendations: List[str] = Field(
-        description="Overall recommendations for code improvements"
-    )
+    recommendations: List[str] = Field(description="Overall recommendations for code improvements")
 
 
 def create_code_scan_agent(

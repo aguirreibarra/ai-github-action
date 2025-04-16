@@ -40,12 +40,8 @@ class CodeScanAction:
                 logger.info(f"Processing repository: {repo_name}")
 
                 if not repo_name:
-                    logger.error(
-                        "Missing required repository information in GitHub event"
-                    )
-                    raise ValueError(
-                        "Missing required repository information in GitHub event"
-                    )
+                    logger.error("Missing required repository information in GitHub event")
+                    raise ValueError("Missing required repository information in GitHub event")
 
                 message = f"Please scan the repository: {repo_name}\n"
 
@@ -65,7 +61,5 @@ class CodeScanAction:
                     logger.info(f"Code scan response: {final_output}")
 
             except Exception as e:
-                logger.critical(
-                    f"Unhandled exception in code scan action: {str(e)}", exc_info=True
-                )
+                logger.critical(f"Unhandled exception in code scan action: {str(e)}", exc_info=True)
                 raise

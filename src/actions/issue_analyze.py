@@ -25,9 +25,7 @@ class IssueAnalyzeAction:
             event: The GitHub event data
         """
         logger.info("Initializing Issue Analysis Action")
-        self.agent = create_issue_analyze_agent(
-            model=MODEL, custom_prompt=CUSTOM_PROMPT
-        )
+        self.agent = create_issue_analyze_agent(model=MODEL, custom_prompt=CUSTOM_PROMPT)
         self.event = event
 
     async def run(self) -> None:
@@ -39,15 +37,11 @@ class IssueAnalyzeAction:
                 issue_number = self.event.get("issue", {}).get("number")
                 repo_name = self.event.get("repository", {}).get("full_name")
 
-                logger.info(
-                    f"Processing issue #{issue_number} in repository {repo_name}"
-                )
+                logger.info(f"Processing issue #{issue_number} in repository {repo_name}")
 
                 if not issue_number or not repo_name:
                     logger.error("Missing required issue information in GitHub event")
-                    raise ValueError(
-                        "Missing required issue information in GitHub event"
-                    )
+                    raise ValueError("Missing required issue information in GitHub event")
 
                 with custom_span("Run issue analysis"):
                     message = (

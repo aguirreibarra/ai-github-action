@@ -26,9 +26,7 @@ class PRReviewResponse(BaseModel):
     code_quality: str = Field(description="Assessment of code quality")
     issues: List[str] = Field(description="List of potential issues or bugs found")
     suggestions: List[str] = Field(description="List of suggestions for improvement")
-    assessment: str = Field(
-        description="Overall assessment (approve, request changes, comment)"
-    )
+    assessment: str = Field(description="Overall assessment (approve, request changes, comment)")
     review_event: PRReviewEvent = Field(
         description="The review event type to use for the PR review"
     )
