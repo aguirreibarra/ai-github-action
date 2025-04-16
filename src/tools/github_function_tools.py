@@ -612,7 +612,7 @@ async def create_pull_request_review(
         review_comments: Optional list of ReviewComment objects for inline code comments.
             These appear as comments on specific lines in the PR diff.
             Each ReviewComment object contains:
-                - path: The path to the file being commented on
+                - path: The path to the file being commented on (must be part of the diff).
                 - body: The comment text
                 - line: The line number of the comment (must be part of the diff) or
                   None if the comment is not on a specific line.
