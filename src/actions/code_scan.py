@@ -61,5 +61,5 @@ class CodeScanAction:
                     logger.info(f"Code scan response: {final_output}")
 
             except Exception as e:
-                logger.critical(f"Unhandled exception in code scan action: {str(e)}", exc_info=True)
+                logger.critical(f"Unhandled exception in code scan action: {e!s}", exc_info=True)
                 raise

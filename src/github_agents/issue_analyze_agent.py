@@ -2,9 +2,7 @@
 Issue Analysis agent using OpenAI Agents SDK.
 """
 
-from typing import List, Optional
-
-from agents import Agent
+from agents import Agent, ComputerTool, FileSearchTool, FunctionTool, WebSearchTool
 from pydantic import BaseModel, Field
 
 from src.tools.github_function_tools import (
@@ -37,12 +35,12 @@ class IssueAnalysisResponse(BaseModel):
     )
     complexity: str = Field(description="Estimated complexity (low, medium, high)")
     priority: str = Field(description="Suggested priority (low, medium, high)")
-    related_areas: List[str] = Field(description="Code areas that might be related to this issue")
-    next_steps: List[str] = Field(description="Suggested next steps to resolve the issue")
+    related_areas: list[str] = Field(description="Code areas that might be related to this issue")
+    next_steps: list[str] = Field(description="Suggested next steps to resolve the issue")
 
 
 def create_issue_analyze_agent(
-    model: str = "gpt-4o-mini", custom_prompt: Optional[str] = None
+    model: str = "gpt-4o-mini", custom_prompt: str | None = None
 ) -> Agent:
     """Create an Issue Analysis agent with issue-specific tools.
 
@@ -68,16 +66,18 @@ def create_issue_analyze_agent(
     Be thorough in your investigation and provide specific recommendations based on 
     the issue content and repository context.
 
-    Use the provided tools to investigate root cause or possible solutions and provide a detailed insights.
+    Use the provided tools to investigate root cause or possible solutions and
+    provide a detailed insights.
 
-    IMPORTANT: You MUST use the add_issue_comment tool at the end of your investigation to add a comment to the issue with your analysis.
+    IMPORTANT: You MUST use the add_issue_comment tool at the end of your investigation to add a
+    comment to the issue with your analysis.
     Call the add_labels_to_issue tool to add the appropriate labels to the issue.
     """
 
     if custom_prompt:
         instructions = custom_prompt
 
-    tools = [
+    tools: list[FunctionTool | FileSearchTool | WebSearchTool | ComputerTool] = [
         get_repository_info,
         get_repository_file_content,
         get_repository_stats,

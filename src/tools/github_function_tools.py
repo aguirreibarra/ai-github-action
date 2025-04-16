@@ -4,10 +4,10 @@ GitHub tools implemented as function tools for OpenAI Agents SDK.
 
 import logging
 from enum import Enum
-from typing import Any, Dict, List, NotRequired, Optional, TypedDict
+from typing import Any, NotRequired, TypedDict
 
+import github
 from agents import RunContextWrapper, function_tool
-from github.ContentFile import ContentFile
 
 from src.context.github_context import GithubContext
 
@@ -78,7 +78,7 @@ async def get_pull_request(
 @function_tool
 async def get_pull_request_files(
     context: RunContextWrapper[GithubContext], repo: str, pr_number: int
-) -> List[Dict[str, Any]]:
+) -> list[dict[str, Any]]:
     """Get files changed in a pull request.
 
     Args:
@@ -121,7 +121,7 @@ async def update_or_create_pr_comment(
     pr_number: int,
     body: str,
     header_marker: str,
-) -> Dict[str, Any]:
+) -> dict[str, Any]:
     """Update an existing AI comment or create a new one on a pull request.
 
     Args:
@@ -134,7 +134,12 @@ async def update_or_create_pr_comment(
         Dictionary with comment details including id, url, and action taken ('updated' or 'created')
     """
     logger.info(
-        f"Tool call: update_or_create_pr_comment repo: {repo}, pr_number: {pr_number}, body: {body}, header_marker: {header_marker}"
+        "Tool call: update_or_create_pr_comment repo: %s,"
+        " pr_number: %s, body: %s, header_marker: %s",
+        repo,
+        pr_number,
+        body,
+        header_marker,
     )
     repo_obj = context.context.github_client.get_repo(repo)
     pr = repo_obj.get_pull(pr_number)
@@ -168,7 +173,7 @@ async def update_or_create_pr_comment(
 @function_tool
 async def get_repository_info(
     context: RunContextWrapper[GithubContext], repo: str
-) -> Dict[str, Any]:
+) -> dict[str, Any]:
     """Get basic information about a repository.
 
     Args:
@@ -199,7 +204,7 @@ async def get_repository_info(
 @function_tool
 async def get_issue(
     context: RunContextWrapper[GithubContext], repo: str, issue_number: int
-) -> Dict[str, Any]:
+) -> dict[str, Any]:
     """Get detailed information about an issue.
 
     Args:
@@ -233,7 +238,7 @@ async def add_issue_comment(
     repo: str,
     issue_number: int,
     body: str,
-) -> Dict[str, Any]:
+) -> dict[str, Any]:
     """Add a new comment to an issue.
 
     Args:
@@ -245,7 +250,10 @@ async def add_issue_comment(
         Dictionary with comment details including id and url
     """
     logger.info(
-        f"Tool call: add_issue_comment repo: {repo}, issue_number: {issue_number}, body: {body}"
+        "Tool call: add_issue_comment repo: %s, issue_number: %s, body: %s",
+        repo,
+        issue_number,
+        body,
     )
     repo_obj = context.context.github_client.get_repo(repo)
     issue = repo_obj.get_issue(issue_number)
@@ -263,7 +271,7 @@ async def update_or_create_issue_comment(
     issue_number: int,
     body: str,
     header_marker: str,
-) -> Dict[str, Any]:
+) -> dict[str, Any]:
     """Update an existing AI comment on an issue or create a new one.
 
     Args:
@@ -276,7 +284,12 @@ async def update_or_create_issue_comment(
         Dictionary with comment details including id, url, and action taken ('updated' or 'created')
     """
     logger.info(
-        f"Tool call: update_or_create_issue_comment repo: {repo}, issue_number: {issue_number}, body: {body}, header_marker: {header_marker}"
+        "Tool call: update_or_create_issue_comment repo: %s,"
+        " issue_number: %s, body: %s, header_marker: %s",
+        repo,
+        issue_number,
+        body,
+        header_marker,
     )
     repo_obj = context.context.github_client.get_repo(repo)
     issue = repo_obj.get_issue(issue_number)
@@ -311,7 +324,7 @@ async def get_repository_file_content(
     context: RunContextWrapper[GithubContext],
     repo: str,
     path: str,
-    ref: Optional[str] = None,
+    ref: str | None = None,
 ) -> dict[str, Any]:
     """Get the content of a file or directory in a repository.
 
@@ -372,7 +385,7 @@ async def get_repository_file_content(
 async def list_repository_files(
     context: RunContextWrapper[GithubContext],
     repo: str,
-    path: str | None = None,
+    path: str,
     ref: str | None = None,
 ) -> dict[str, Any]:
     """List files in a repository.
@@ -382,9 +395,16 @@ async def list_repository_files(
         path: Path to the file/directory, empty string for root directory
 
     Returns:
-        Dictionary with the files in the directory. Includes the type, name, size, sha, url, git_url, html_url, download_url, and path of each file.
+        Dictionary with the files in the directory.
+          Includes the type, name, size, sha, url, git_url, html_url,
+            download_url, and path of each file.
     """
-    logger.info(f"Tool call: list_repository_files repo: {repo}, path: {path}")
+    logger.info(
+        "Tool call: list_repository_files repo: %s, path: %s, ref: %s",
+        repo,
+        path,
+        ref,
+    )
     repo_obj = context.context.github_client.get_repo(repo)
     if ref is not None:
         files = repo_obj.get_contents(path, ref=ref)
@@ -427,25 +447,41 @@ async def search_code(
     context: RunContextWrapper[GithubContext],
     query: str,
     repo: str,
-) -> list[ContentFile]:
+) -> list[dict[str, Any]]:
     """Search code in a repository with a query.
 
     Args:
         query: Search query with keywords and qualifiers (supports GitHub search syntax)
-        repo: Repository name with owner (e.g., 'owner/repo'). This will appended to the query as a qualifier to limit the search to the specific repository.
+        repo: Repository name with owner (e.g., 'owner/repo').
+          This will appended to the query as a qualifier to limit
+            the search to the specific repository.
 
     Returns:
         List of ContentFile objects matching the search query
     """
     logger.info(f"Tool call: search_code repo: {repo}, query: {query}")
     query = f"{query} repo:{repo}"
-    return context.context.github_client.search_code(query)
+    list_of_files = context.context.github_client.search_code(query)
+    return [
+        {
+            "name": file.name,
+            "path": file.path,
+            "url": file.url,
+            "git_url": file.git_url,
+            "html_url": file.html_url,
+            "type": file.type,
+            "size": file.size,
+            "sha": file.sha,
+            "content": file.decoded_content.decode("utf-8"),
+        }
+        for file in list_of_files
+    ]
 
 
 @function_tool
 async def get_repository_stats(
     context: RunContextWrapper[GithubContext], repo: str
-) -> Dict[str, Any]:
+) -> dict[str, Any]:
     """Get statistical information about a repository.
 
     Args:
@@ -493,7 +529,7 @@ async def get_repository_stats(
             }
             for freq in (repo_obj.get_stats_code_frequency() or [])
         ]
-    except:
+    except Exception:
         stats["commit_activity"] = "Stats unavailable"
         stats["code_frequency"] = "Stats unavailable"
 
@@ -506,8 +542,8 @@ async def create_issue(
     repo: str,
     title: str,
     body: str,
-    labels: Optional[List[str]] = None,
-) -> Dict[str, Any]:
+    labels: list[str] | None = None,
+) -> dict[str, Any]:
     """Create a new issue in a repository.
 
     Args:
@@ -567,7 +603,8 @@ async def create_pull_request_review(
     Args:
         repo: Repository name with owner (e.g., 'owner/repo')
         pr_number: Pull request number
-        body: Overall review comment content, supports Markdown. This appears at the top of the review.
+        body: Overall review comment content, supports Markdown.
+            This appears at the top of the review.
         event: Review event type that determines the review action:
             - APPROVE: Approves the PR and allows merging
             - REQUEST_CHANGES: Indicates required changes before the PR can be merged
@@ -578,7 +615,9 @@ async def create_pull_request_review(
                 - path: The path to the file being commented on
                 - body: The comment text
                 - line: The line number of the comment (must be part of the diff)
-                - side: When a review comment is attached to a diff, it must refer to a specific line in either the base ("LEFT") or the modified ("RIGHT")
+                - side: When a review comment is attached to a diff,
+                    it must refer to a specific line in either the base ("LEFT") or
+                        the modified ("RIGHT")
 
     Returns:
         Dictionary with review details including:
@@ -587,7 +626,11 @@ async def create_pull_request_review(
             - submitted_at: Timestamp when the review was submitted (ISO format)
     """
     logger.info(
-        f"Tool call: create_pull_request_review repo: {repo}, pr_number: {pr_number}, body: {body}, event: {event}"
+        "Tool call: create_pull_request_review repo: %s, pr_number: %s, body: %s, event: %s",
+        repo,
+        pr_number,
+        body,
+        event,
     )
     repo_obj = context.context.github_client.get_repo(repo)
     pr = repo_obj.get_pull(pr_number)
@@ -596,7 +639,12 @@ async def create_pull_request_review(
     if review_comments is None:
         review = pr.create_review(body=review_body, event=event.value)
     else:
-        review = pr.create_review(body=review_body, event=event.value, comments=review_comments)
+        review_comments_list = [
+            github.PullRequest.ReviewComment(**review_comment) for review_comment in review_comments
+        ]
+        review = pr.create_review(
+            body=review_body, event=event.value, comments=review_comments_list
+        )
 
     return {
         "id": review.id,
@@ -655,7 +703,10 @@ async def add_labels_to_issue(
         Dictionary with success status
     """
     logger.info(
-        f"Tool call: add_labels_to_issue repo: {repo}, issue_number: {issue_number}, labels: {labels}"
+        "Tool call: add_labels_to_issue repo: %s, issue_number: %s, labels: %s",
+        repo,
+        issue_number,
+        labels,
     )
     repo_obj = context.context.github_client.get_repo(repo)
     issue = repo_obj.get_issue(issue_number)

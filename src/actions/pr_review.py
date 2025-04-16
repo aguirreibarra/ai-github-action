@@ -1,7 +1,7 @@
 import logging
 from typing import Any
 
-from agents import Runner, custom_span
+from agents import Agent, Runner, custom_span
 from github import Github
 
 from src.constants import CUSTOM_PROMPT, GITHUB_TOKEN, MAX_TURNS, MODEL
@@ -22,7 +22,7 @@ class PRReviewAction:
             event: The GitHub event data
         """
         logger.info("Initializing PR Review Action")
-        self.agent = create_pr_review_agent(model=MODEL, custom_prompt=CUSTOM_PROMPT)
+        self.agent: Agent = create_pr_review_agent(model=MODEL, custom_prompt=CUSTOM_PROMPT)
         self.event = event
 
     async def run(self) -> None:
@@ -45,10 +45,10 @@ class PRReviewAction:
                         github_event=self.event,
                         github_client=Github(GITHUB_TOKEN),
                     )
-                    input = f"Pull request review for {repo_name}#{pr_number}"
+                    input_message = f"Pull request review for {repo_name}#{pr_number}"
                     result = await Runner.run(
                         starting_agent=self.agent,
-                        input=input,
+                        input=input_message,
                         context=context,
                         max_turns=MAX_TURNS,
                     )
@@ -57,5 +57,5 @@ class PRReviewAction:
                     logger.info(f"agent response: {final_output}")
 
             except Exception as e:
-                logger.critical(f"Unhandled exception in PR review action: {str(e)}", exc_info=True)
+                logger.critical(f"Unhandled exception in PR review action: {e!s}", exc_info=True)
                 raise
