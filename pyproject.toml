@@ -69,4 +69,12 @@ indent-style = "space"
 docstring-code-format = true
 
 [tool.ruff.lint.isort]
-known-first-party = ["src"] 
+known-first-party = ["src"]
+
+[tool.mypy]
+python_version = 3.12
+warn_return_any = false
+warn_unused_configs = true
+disallow_untyped_defs = false
+disallow_incomplete_defs = false
+ignore_missing_imports = true
