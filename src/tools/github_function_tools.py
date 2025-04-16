@@ -614,7 +614,8 @@ async def create_pull_request_review(
             Each ReviewComment object contains:
                 - path: The path to the file being commented on
                 - body: The comment text
-                - line: The line number of the comment (must be part of the diff)
+                - line: The line number of the comment (must be part of the diff) or
+                  None if the comment is not on a specific line.
                 - side: When a review comment is attached to a diff,
                     it must refer to a specific line in either the base ("LEFT") or
                         the modified ("RIGHT")
