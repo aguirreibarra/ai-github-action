@@ -33,7 +33,7 @@ def test_get_github_event(mock_logger, mock_exit, mock_env_vars, mock_event_data
         with patch("builtins.open", m):
             event = get_github_event()
             assert event == mock_event_data
-            m.assert_called_once_with("/path/to/event.json", "r")
+            m.assert_called_once_with("/path/to/event.json")
 
 
 @pytest.mark.asyncio
