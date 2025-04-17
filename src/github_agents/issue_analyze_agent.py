@@ -40,7 +40,7 @@ class IssueAnalysisResponse(BaseModel):
 
 
 def create_issue_analyze_agent(
-    model: str = "gpt-4o-mini", custom_prompt: str | None = None
+    model: str = "gpt-4.1-nano", custom_prompt: str | None = None
 ) -> Agent:
     """Create an Issue Analysis agent with issue-specific tools.
 

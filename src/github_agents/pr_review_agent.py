@@ -31,7 +31,7 @@ class PRReviewResponse(BaseModel):
 
 
 def create_pr_review_agent(
-    model: str = "gpt-4o-mini", custom_prompt: str | None = None
+    model: str = "gpt-4.1-nano", custom_prompt: str | None = None
 ) -> Agent[PRReviewResponse]:
     """Create a PR Review agent with PR-specific tools.
 

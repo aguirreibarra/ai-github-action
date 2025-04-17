@@ -11,7 +11,7 @@ import pytest
         ("GITHUB_TOKEN", "test-token", None),
         ("OPENAI_API_KEY", "test-key", None),
         ("CUSTOM_PROMPT", "test-prompt", None),
-        ("MODEL", "gpt-4", "gpt-4o-mini"),
+        ("MODEL", "gpt-4", "gpt-4.1-nano"),
         ("LOG_LEVEL", "debug", "INFO"),
         ("GITHUB_EVENT_PATH", "/path/to/event.json", None),
         ("MAX_TURNS", "50", "30"),
@@ -45,7 +45,7 @@ def test_constants_from_env(env_var, expected_value, default_value, monkeypatch)
 @pytest.mark.parametrize(
     "env_var,default_value",
     [
-        ("MODEL", "gpt-4o-mini"),
+        ("MODEL", "gpt-4.1-nano"),
         ("LOG_LEVEL", "INFO"),
         ("MAX_TURNS", 30),
     ],

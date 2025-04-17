@@ -18,8 +18,8 @@ jobs:
           openai-api-key: ${{ secrets.OPENAI_API_KEY }}
           github-token: ${{ secrets.GITHUB_TOKEN }}
 
-          # Model selection (optional, defaults to gpt-4o-mini)
-          model: gpt-4o-mini
+          # Model selection (optional, defaults to gpt-4.1-nano)
+          model: gpt-4.1-nano
 
           # Optional: Custom system prompt to guide the AI review
           custom-prompt: >

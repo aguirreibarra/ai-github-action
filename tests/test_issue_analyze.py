@@ -32,7 +32,7 @@ def test_issue_analyze_init(mock_create_agent, mock_event):
 
     assert action.event == mock_event
     assert action.agent == mock_agent
-    mock_create_agent.assert_called_once_with(model="gpt-4o-mini", custom_prompt=None)
+    mock_create_agent.assert_called_once_with(model="gpt-4.1-nano", custom_prompt=None)
 
 
 @pytest.mark.asyncio

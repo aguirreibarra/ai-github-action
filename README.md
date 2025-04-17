@@ -125,7 +125,7 @@ jobs:
 | `action-type` | Type of action (pr-review, issue-analyze, code-scan) | Yes | - |
 | `openai-api-key` | OpenAI API key | Yes | - |
 | `github-token` | GitHub token for API access | Yes | - |
-| `model` | OpenAI model to use | No | gpt-4o-mini |
+| `model` | OpenAI model to use | No | gpt-4.1-nano |
 | `max-turns` | Maximum turns for the AI | No | 30 |
 | `custom-prompt` | Custom system prompt for the AI | No | - |
 

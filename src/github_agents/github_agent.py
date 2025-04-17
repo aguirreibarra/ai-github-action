@@ -20,7 +20,7 @@ class GitHubResponse(BaseModel):
     summary: str | None = Field(default=None, description="An optional summary of the response")
 
 
-def create_github_agent(model: str = "gpt-4o-mini", custom_prompt: str | None = None) -> Agent:
+def create_github_agent(model: str = "gpt-4.1-nano", custom_prompt: str | None = None) -> Agent:
     """Create a base GitHub agent with common tools.
 
     Args:

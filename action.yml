@@ -18,7 +18,7 @@ inputs:
   model:
     description: 'OpenAI model to use'
     required: false
-    default: 'gpt-4o-mini'
+    default: 'gpt-4.1-nano'
   custom-prompt:
     description: 'Custom system prompt for the AI'
     required: false
