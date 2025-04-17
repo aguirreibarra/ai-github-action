@@ -11,7 +11,7 @@ def mock_env_vars(monkeypatch):
     monkeypatch.setenv("GITHUB_TOKEN", "mock-token")
     monkeypatch.setenv("OPENAI_API_KEY", "mock-key")
     monkeypatch.setenv("ACTION_TYPE", "pr-review")
-    monkeypatch.setenv("MODEL", "gpt-4o-mini")
+    monkeypatch.setenv("MODEL", "o4-mini")
     monkeypatch.setenv("LOG_LEVEL", "INFO")
     monkeypatch.setenv("MAX_TURNS", "30")
 

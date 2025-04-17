@@ -57,7 +57,7 @@ def test_create_issue_analyze_agent():
     """Test that the agent creation function works with the default model."""
     agent = create_issue_analyze_agent()
     assert agent.name == "Issue Analysis Agent"
-    assert agent.model == "gpt-4o-mini"
+    assert agent.model == "o4-mini"
     assert agent.output_type == IssueAnalysisResponse
 
     # Test with custom model and prompt

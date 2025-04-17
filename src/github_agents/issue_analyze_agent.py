@@ -39,9 +39,7 @@ class IssueAnalysisResponse(BaseModel):
     next_steps: list[str] = Field(description="Suggested next steps to resolve the issue")
 
 
-def create_issue_analyze_agent(
-    model: str = "gpt-4o-mini", custom_prompt: str | None = None
-) -> Agent:
+def create_issue_analyze_agent(model: str = "o4-mini", custom_prompt: str | None = None) -> Agent:
     """Create an Issue Analysis agent with issue-specific tools.
 
     Args:

@@ -34,7 +34,7 @@ class CodeScanResponse(BaseModel):
     recommendations: list[str] = Field(description="Overall recommendations for code improvements")
 
 
-def create_code_scan_agent(model: str = "gpt-4o-mini", custom_prompt: str | None = None) -> Agent:
+def create_code_scan_agent(model: str = "o4-mini", custom_prompt: str | None = None) -> Agent:
     """Create a Code Scan agent for analyzing repository code.
 
     Args:
