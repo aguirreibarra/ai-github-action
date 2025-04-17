@@ -67,6 +67,6 @@ jobs:
         action-type: pr-review
         openai-api-key: ${{ secrets.OPENAI_API_KEY }}
         github-token: ${{ secrets.GITHUB_TOKEN }}
-        model: gpt-4o-mini
+        model: o4-mini
       env:
         LOG_LEVEL: INFO
