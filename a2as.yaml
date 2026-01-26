@@ -1,0 +1,533 @@
+manifest:
+  version: "0.1.2"
+  schema: https://a2as.org/cert/schema
+  subject:
+    name: aguirreibarra/ai-github-action
+    source: https://github.com/aguirreibarra/ai-github-action
+    branch: main
+    commit: "4abe18b0"
+    scope: [src/actions/code_scan.py, src/actions/issue_analyze.py, src/actions/pr_review.py, src/context/github_context.py,
+      src/github_agents/code_scan_agent.py, src/github_agents/github_agent.py, src/github_agents/issue_analyze_agent.py, src/github_agents/pr_review_agent.py,
+      src/tools/__init__.py, src/tools/github_function_tools.py]
+  issued:
+    by: A2AS.org
+    at: '2026-01-26T16:15:15Z'
+  signatures:
+    digest: sha256:k3mst2os1z9xo-3Ppc1bWwwkAnUkEROI9TTmJ-8cco8
+    key: ed25519:5AuVO96z9O418A_cLuEQqOsEm1sk5h0M6VbsYby_AkE
+    sig: ed25519:Fz7DQpM2uq2L6Gnbg3RSotcCEa8fgkBvGkJ-KMlhjYPMA0HRn9d_Owk6qTKrsUM83YMbPcUjc-C86RIJwvKxCw
+
+agents:
+  agent.create_code_scan_agent:
+    type: factory
+    models: [model]
+    tools: [tools]
+    params:
+      function: create_code_scan_agent
+      name: Code Scan Agent
+      output_type: CodeScanResponse
+      instructions: [You are a code scan agent that analyzes code in GitHub repositories., 'Your task is to scan repository
+          files for issues and provide:', 1. An overview of the code scan results, '2. A list of issues with details (file,
+          line if possible, severity, description, suggestion)', 3. Good practices observed in the code, 4. Overall recommendations
+          for improvement, 'Look for:', '- Security vulnerabilities', '- Performance issues', '- Code quality problems', '-
+          Potential bugs', '- Anti-patterns', 'Be thorough and specific in your analysis, focusing on the most important issues
+          first.', 'IMPORTANT: If you find any issues, create an issue in the repository using the create_issue tool']
+  agent.create_github_agent:
+    type: factory
+    models: [model]
+    tools: [tools]
+    params:
+      function: create_github_agent
+      name: GitHub Agent
+      output_type: GitHubResponse
+      instructions: ['You are an AI assistant that helps with GitHub repositories. You can analyze repositories, files, and
+          code. Provide clear, concise, and helpful responses. Always use the available tools to gather information before
+          making judgments.']
+  agent.create_issue_analyze_agent:
+    type: factory
+    models: [model]
+    tools: [tools]
+    params:
+      function: create_issue_analyze_agent
+      name: Issue Analysis Agent
+      output_type: IssueAnalysisResponse
+      instructions: [You are an issue analyzer that helps categorize and assess GitHub issues., 'Your task is to investigate
+          and analyze the issue using the tools provided and generate:', 1. A summary of the issue, '2. The category (bug,
+          feature request, question, etc.) with confidence level', '3. Estimated complexity (low, medium, high)', '4. Suggested
+          priority (low, medium, high)', 5. Code areas that might be related, 6. Suggested next steps, Be thorough in your
+          investigation and provide specific recommendations based on, the issue content and repository context., Use the
+          provided tools to investigate root cause or possible solutions and, provide a detailed insights., 'IMPORTANT: You
+          MUST use the add_issue_comment tool at the end of your investigation to add a', comment to the issue with your analysis.,
+        Call the add_labels_to_issue tool to add the appropriate labels to the issue.]
+  agent.create_pr_review_agent:
+    type: factory
+    models: [model]
+    tools: [tools]
+    params:
+      function: create_pr_review_agent
+      name: PR Review Agent
+      output_type: PRReviewResponse
+      instructions: [You are a reviewer who helps analyze GitHub pull requests., 'Your task is to use the tools provided to
+          review the PR files,', 'analyze the code changes, and provide:', 1. A summary of the changes, 2. Code quality assessment,
+        3. Potential issues or bugs, 4. Suggestions for improvement, '5. Overall assessment (APPROVE, REQUEST_CHANGES, COMMENT)',
+        Always provide constructive feedback with specific examples and suggestions., 'IMPORTANT (Follow these steps in order):',
+        1. You MUST use the get_pull_request tool to get information about the PR., 2. You MUST use the get_pull_request_files
+          tool to fetch the diff of the files in the PR., 3. Use the get_repository_file_content tool to get more context
+          about the files in the PR., 4. Use the search_code tool to search for code in the repository., 5. You MUST call
+          the create_pull_request_review tool to submit your review., You're encouraged to add review_comments to the PR to
+          help the author understand your feedback.]
+
+models:
+  model:
+    type: variable
+    agents: [agent.create_pr_review_agent, agent.create_issue_analyze_agent, agent.create_github_agent, agent.create_code_scan_agent]
+
+tools:
+  add_issue_comment:
+    type: decorator
+    params:
+      description: |-
+        Add a new comment to an issue.
+
+        Args:
+            repo: Repository name with owner (e.g., 'owner/repo')
+            issue_number: Issue number
+            body: Comment content, supports Markdown
+
+        Returns:
+            Dictionary with comment details including id and url
+  add_labels_to_issue:
+    type: decorator
+    params:
+      description: |-
+        Add labels to an existing issue.
+
+        Args:
+            repo: Repository name with owner (e.g., 'owner/repo')
+            issue_number: Issue number
+            labels: List of label names to add to the issue
+
+        Returns:
+            Dictionary with success status
+  create_issue:
+    type: decorator
+    params:
+      description: |-
+        Create a new issue in a repository.
+
+        Args:
+            repo: Repository name with owner (e.g., 'owner/repo')
+            title: Issue title
+            body: Issue body content, supports Markdown
+            labels: Optional list of label names to apply to the issue
+
+        Returns:
+            Dictionary with issue details including number, id, url, and title
+  create_pull_request_review:
+    type: decorator
+    params:
+      description: |-
+        Create a review for a pull request with optional inline comments.
+
+        This function allows you to submit a formal review on a PR with different approval states.
+        Use this instead of simple comments when you want to approve, request changes, or provide
+        a more structured review with inline comments on specific code sections.
+
+        Args:
+            repo: Repository name with owner (e.g., 'owner/repo')
+            pr_number: Pull request number
+            body: Overall review comment content, supports Markdown.
+                This appears at the top of the review.
+            event: Review event type that determines the review action:
+                - APPROVE: Approves the PR and allows merging
+                - REQUEST_CHANGES: Indicates required changes before the PR can be merged
+                - COMMENT: Leaves feedback without explicit approval/rejection (default)
+            review_comments: Optional list of ReviewComment objects for inline code comments.
+                These appear as comments on specific lines in the PR diff.
+                Each ReviewComment object contains:
+                    - path: The path to the file being commented on (must be part of the diff).
+                    - body: The comment text
+                    - line: The line number of the comment (must be part of the diff) or
+                      None if the comment is not on a specific line.
+                    - side: When a review comment is attached to a diff,
+                        it must refer to a specific line in either the base ("LEFT") or
+                            the modified ("RIGHT")
+
+        Returns:
+            Dictionary with review details including:
+                - id: Unique identifier for the review
+                - state: Current state of the review
+                - submitted_at: Timestamp when the review was submitted (ISO format)
+  get_issue:
+    type: decorator
+    params:
+      description: |-
+        Get detailed information about an issue.
+
+        Args:
+            repo: Repository name with owner (e.g., 'owner/repo')
+            issue_number: Issue number
+
+        Returns:
+            Dictionary with issue details including title, body, state, comments, labels, etc.
+  get_pull_request:
+    type: decorator
+    params:
+      description: |-
+        Get detailed information about a pull request.
+
+        Args:
+            repo: Repository name with owner (e.g., 'owner/repo')
+            pr_number: The number that identifies the pull request
+
+        Returns:
+            Dictionary with pull request details including title, body, state, commits, etc.
+  get_pull_request_files:
+    type: decorator
+    params:
+      description: |-
+        Get files changed in a pull request.
+
+        Args:
+            repo: Repository name with owner (e.g., 'owner/repo')
+            pr_number: Pull request number
+
+        Returns:
+            List of dictionaries with file details including filename, status, changes, etc.
+  get_repository_file_content:
+    type: decorator
+    params:
+      description: |-
+        Get the content of a file or directory in a repository.
+
+        Args:
+            repo: Repository name with owner (e.g., 'owner/repo')
+            path: Path to the file/directory, empty string for root directory
+            ref: The name of the commit/branch/tag, defaults to the default branch
+
+        Returns:
+            Dictionary with the content of the file/directory
+  get_repository_info:
+    type: decorator
+    params:
+      description: |-
+        Get basic information about a repository.
+
+        Args:
+            repo: Repository name with owner (e.g., 'owner/repo')
+
+        Returns:
+            Dictionary with repository details including name, description, language, stars, etc.
+  get_repository_stats:
+    type: decorator
+    params:
+      description: |-
+        Get statistical information about a repository.
+
+        Args:
+            repo: Repository name with owner (e.g., 'owner/repo')
+
+        Returns:
+            Dictionary with repository statistics including forks, stars, commit activity, etc.
+  list_issue_comments:
+    type: decorator
+    params:
+      description: |-
+        List all comments on an issue.
+
+        Args:
+            repo: Repository name with owner (e.g., 'owner/repo')
+            issue_number: Issue number
+
+        Returns:
+            List of dictionaries with comment details including id, body, user, and timestamps
+  list_issue_labels:
+    type: decorator
+    params:
+      description: |-
+        List all labels on an issue.
+
+        Args:
+            repo: Repository name with owner (e.g., 'owner/repo')
+            issue_number: Issue number
+
+        Returns:
+            List of label names on the issue
+  list_repository_files:
+    type: decorator
+    params:
+      description: |-
+        List files in a repository.
+
+        Args:
+            repo: Repository name with owner (e.g., 'owner/repo')
+            path: Path to the file/directory, empty string for root directory
+
+        Returns:
+            Dictionary with the files in the directory.
+              Includes the type, name, size, sha, url, git_url, html_url,
+                download_url, and path of each file.
+  search_code:
+    type: decorator
+    params:
+      description: |-
+        Search code in a repository with a query.
+
+        Args:
+            query: Search query with keywords and qualifiers (supports GitHub search syntax)
+            repo: Repository name with owner (e.g., 'owner/repo').
+              This will appended to the query as a qualifier to limit
+                the search to the specific repository.
+
+        Returns:
+            List of ContentFile objects matching the search query
+  tools:
+    type: variable
+    agents: [agent.create_pr_review_agent, agent.create_issue_analyze_agent, agent.create_github_agent, agent.create_code_scan_agent]
+    params:
+      dynamic: "True"
+  update_or_create_issue_comment:
+    type: decorator
+    params:
+      description: |-
+        Update an existing AI comment on an issue or create a new one.
+
+        Args:
+            repo: Repository name with owner (e.g., 'owner/repo')
+            issue_number: Issue number
+            body: Comment content, supports Markdown
+            header_marker: Unique identifier at the beginning of comments made by this bot
+
+        Returns:
+            Dictionary with comment details including id, url, and action taken ('updated' or 'created')
+  update_or_create_pr_comment:
+    type: decorator
+    params:
+      description: |-
+        Update an existing AI comment or create a new one on a pull request.
+
+        Args:
+            repo: Repository name with owner (e.g., 'owner/repo')
+            pr_number: Pull request number
+            body: Comment content, supports Markdown
+            header_marker: Unique identifier at the beginning of comments made by this bot
+
+        Returns:
+            Dictionary with comment details including id, url, and action taken ('updated' or 'created')
+
+imports:
+  ACTION_TYPE: src.constants.ACTION_TYPE
+  add_issue_comment: src.tools.github_function_tools.add_issue_comment
+  add_labels_to_issue: src.tools.github_function_tools.add_labels_to_issue
+  Agent: agents.Agent
+  Any: typing.Any
+  asyncio: asyncio
+  BaseModel: pydantic.BaseModel
+  CodeScanAction: src.actions.code_scan.CodeScanAction
+  ComputerTool: agents.ComputerTool
+  ConfigDict: pydantic.ConfigDict
+  create_code_scan_agent: src.github_agents.code_scan_agent.create_code_scan_agent
+  create_issue: src.tools.github_function_tools.create_issue
+  create_issue_analyze_agent: src.github_agents.issue_analyze_agent.create_issue_analyze_agent
+  create_pr_review_agent: src.github_agents.pr_review_agent.create_pr_review_agent
+  create_pull_request_review: src.tools.github_function_tools.create_pull_request_review
+  CUSTOM_PROMPT: src.constants.CUSTOM_PROMPT
+  custom_span: agents.custom_span
+  Enum: enum.Enum
+  Field: pydantic.Field
+  FileSearchTool: agents.FileSearchTool
+  function_tool: agents.function_tool
+  FunctionTool: agents.FunctionTool
+  gen_trace_id: agents.gen_trace_id
+  get_issue: src.tools.github_function_tools.get_issue
+  get_pull_request: src.tools.github_function_tools.get_pull_request
+  get_pull_request_files: src.tools.github_function_tools.get_pull_request_files
+  get_repository_file_content: src.tools.github_function_tools.get_repository_file_content
+  get_repository_info: src.tools.github_function_tools.get_repository_info
+  get_repository_stats: src.tools.github_function_tools.get_repository_stats
+  Github: github.Github
+  github: github
+  GITHUB_EVENT_PATH: src.constants.GITHUB_EVENT_PATH
+  GITHUB_TOKEN: src.constants.GITHUB_TOKEN
+  GithubContext: src.context.github_context.GithubContext
+  IssueAnalyzeAction: src.actions.issue_analyze.IssueAnalyzeAction
+  json: json
+  list_issue_comments: src.tools.github_function_tools.list_issue_comments
+  list_issue_labels: src.tools.github_function_tools.list_issue_labels
+  list_repository_files: src.tools.github_function_tools.list_repository_files
+  LOG_LEVEL: src.constants.LOG_LEVEL
+  logging: logging
+  MAX_TURNS: src.constants.MAX_TURNS
+  MODEL: src.constants.MODEL
+  NotRequired: typing.NotRequired
+  OPENAI_API_KEY: src.constants.OPENAI_API_KEY
+  PRReviewAction: src.actions.pr_review.PRReviewAction
+  PRReviewEvent: src.tools.github_function_tools.PRReviewEvent
+  RunContextWrapper: agents.RunContextWrapper
+  Runner: agents.Runner
+  search_code: src.tools.github_function_tools.search_code
+  sys: sys
+  trace: agents.trace
+  TypedDict: typing.TypedDict
+  update_or_create_issue_comment: src.tools.github_function_tools.update_or_create_issue_comment
+  update_or_create_pr_comment: src.tools.github_function_tools.update_or_create_pr_comment
+  WebSearchTool: agents.WebSearchTool
+
+functions:
+  __init__:
+    type: sync
+    module: src.actions.code_scan
+    args: [self, event]
+  add_issue_comment:
+    type: tool
+    module: src.tools.github_function_tools
+    args: [context, repo, issue_number, body]
+    params:
+      returns: dict
+  add_labels_to_issue:
+    type: tool
+    module: src.tools.github_function_tools
+    args: [context, repo, issue_number, labels]
+    params:
+      returns: dict
+  async_main:
+    type: async
+    module: src.main
+  create_code_scan_agent:
+    type: sync
+    module: src.github_agents.code_scan_agent
+    args: [model, custom_prompt]
+    params:
+      returns: Agent
+  create_github_agent:
+    type: sync
+    module: src.github_agents.github_agent
+    args: [model, custom_prompt]
+    params:
+      returns: Agent
+  create_issue:
+    type: tool
+    module: src.tools.github_function_tools
+    args: [context, repo, title, body, labels]
+    params:
+      returns: dict
+  create_issue_analyze_agent:
+    type: sync
+    module: src.github_agents.issue_analyze_agent
+    args: [model, custom_prompt]
+    params:
+      returns: Agent
+  create_pr_review_agent:
+    type: sync
+    module: src.github_agents.pr_review_agent
+    args: [model, custom_prompt]
+    params:
+      returns: Agent[PRReviewResponse]
+  create_pull_request_review:
+    type: tool
+    module: src.tools.github_function_tools
+    args: [context, repo, pr_number, body, event, review_comments]
+    params:
+      returns: dict
+  execute_tool:
+    type: async
+    module: src.tools
+    args: [name, parameters, context]
+    params:
+      returns: str
+  get_github_event:
+    type: sync
+    module: src.main
+  get_issue:
+    type: tool
+    module: src.tools.github_function_tools
+    args: [context, repo, issue_number]
+    params:
+      returns: dict
+  get_pull_request:
+    type: tool
+    module: src.tools.github_function_tools
+    args: [context, repo, pr_number]
+    params:
+      returns: dict
+  get_pull_request_files:
+    type: tool
+    module: src.tools.github_function_tools
+    args: [context, repo, pr_number]
+    params:
+      returns: list[dict]
+  get_repository_file_content:
+    type: tool
+    module: src.tools.github_function_tools
+    args: [context, repo, path, ref]
+    params:
+      returns: dict
+  get_repository_info:
+    type: tool
+    module: src.tools.github_function_tools
+    args: [context, repo]
+    params:
+      returns: dict
+  get_repository_stats:
+    type: tool
+    module: src.tools.github_function_tools
+    args: [context, repo]
+    params:
+      returns: dict
+  get_tool_by_name:
+    type: sync
+    module: src.tools
+    args: [name]
+  list_issue_comments:
+    type: tool
+    module: src.tools.github_function_tools
+    args: [context, repo, issue_number]
+    params:
+      returns: list[dict]
+  list_issue_labels:
+    type: tool
+    module: src.tools.github_function_tools
+    args: [context, repo, issue_number]
+    params:
+      returns: list[str]
+  list_repository_files:
+    type: tool
+    module: src.tools.github_function_tools
+    args: [context, repo, path, ref]
+    params:
+      returns: dict
+  main:
+    type: sync
+    module: src.main
+  run:
+    type: async
+    module: src.actions.code_scan
+    args: [self]
+    params:
+      returns: None
+  search_code:
+    type: tool
+    module: src.tools.github_function_tools
+    args: [context, query, repo]
+    params:
+      returns: list[dict]
+  update_or_create_issue_comment:
+    type: tool
+    module: src.tools.github_function_tools
+    args: [context, repo, issue_number, body, header_marker]
+    params:
+      returns: dict
+  update_or_create_pr_comment:
+    type: tool
+    module: src.tools.github_function_tools
+    args: [context, repo, pr_number, body, header_marker]
+    params:
+      returns: dict
+
+files:
+  GITHUB_EVENT_PATH:
+    type: variable
+    actions: [read]
+    params:
+      caller: [open, json.load]
+      alias: [f]
