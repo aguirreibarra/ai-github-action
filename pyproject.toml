@@ -19,7 +19,7 @@ classifiers = [
 ]
 dependencies = [
     "PyGithub==2.6.1",
-    "pydantic==2.10.6",
+    "pydantic>=2.11.0,<3",
     "openai-agents==0.0.11",
 ]
 
